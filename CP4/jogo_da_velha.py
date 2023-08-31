@@ -40,6 +40,17 @@ def validacao_dados(v, tipo):
             if v != "1" and v != "2":
                 separador(28, 5)
         return v
+    
+    elif tipo == 2:
+        while v != "0" and v != "1" and v != "2":
+            v = input("OPÇÃO INVÁLIDA\nEscolha a linha (0, 1, 2): ")
+        return int(v)
+    
+    elif tipo == 3:
+        while v != "0" and v != "1" and v != "2":
+            v = input("OPÇÃO INVÁLIDA\nEscolha a coluna (0, 1, 2): ")
+        return int(v)
+
 
 #Função para escolher o modo de jogo
 def imprimeMenuPrincipal():
@@ -55,11 +66,43 @@ def jogador_maquina():
 #Função do modo de jogo vs jogador
 def modoJogador(m):
     matriz = m.copy()
-    imprimirTabuleiro(matriz)
     player1 = input("Digite o nome do jogador 1: ")
     player2= input("Digite o nome do jogador 2: ")
-    while c < 6:
-        jogada = input(f"{player1} em qual posição deseja jogar? ")
+    c=0
+    player = player1
+    while True:
+        imprimirTabuleiro(matriz)
+        linha = input(f"{player} escolha a linha (0, 1, 2): ")
+        linha = validacao_dados(linha, 2)
+        coluna = input(f"{player}, escolha a coluna (0, 1, 2): ")
+        coluna = validacao_dados(coluna, 3)
+
+        if player == player1 and matriz[linha][coluna] == " ":
+            matriz[linha][coluna] = "X"
+            if verificar_vencedor(matriz, player):
+                print(f"Jogador {player} venceu!")
+                break
+        
+        elif player == player2 and matriz[linha][coluna] == " ":
+            matriz[linha][coluna] = "O"
+            if verificar_vencedor(matriz, player):
+                print(f"Jogador {player} venceu!")
+                break
+
+        else: 
+            linha = input("\033[91mPosição inválida\033[0m, escolha a linha (0, 1, 2): ")
+            linha = validacao_dados(linha, 2)
+            coluna = input("\033[91mPosição inválida\033[0m, escolha a coluna (0, 1, 2): ")
+            coluna = validacao_dados(coluna, 3)
+
+
+        if player == player1:
+            player = player2
+        elif player == player2:
+            player = player1
+    
+        clear_console()
+
 
 
 
@@ -91,14 +134,14 @@ def verificar_vencedor(tabuleiro, jogador):
 
 def inicializarTabuleiro():
     matriz = [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9]
+        [" ", " ", " "],
+        [" ", " ", " "],
+        [" ", " ", " "]
     ]
     return matriz
 
 def imprimirTabuleiro(tabuleiro):
-    separador(4, 1)
+    separador(18, 1)
     for linha in tabuleiro:
         print(" | ".join(linha))
         print("-" * 9)
