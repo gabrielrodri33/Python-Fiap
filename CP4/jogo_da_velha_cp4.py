@@ -1,4 +1,5 @@
 import os
+import copy
 
 def separador(n, cor):
     cores = {
@@ -54,6 +55,7 @@ def imprimirTabuleiro(tabuleiro):
         print("-" * 9)
 
 def imprimeMenuPrincipal():
+    clear_console()
     separador(28, 1)
     modoDeJogo = input(" xox JOGO DA VELHA xox\nDigite o número de acordo com o modo do jogo desejado:\n1- Jogador Vs. Máquina\n2- Jogador Vs. Jogador\n")
     modoDeJogo = validacao_dados(modoDeJogo, 1)
@@ -67,7 +69,7 @@ def modoJogador():
     ]
 
     win_player1 = win_player2 = 0
-    matriz = m.copy()
+    matriz = copy.deepcopy(m)
     player1 = input("Digite o nome do jogador 1: ")
     player2 = input("Digite o nome do jogador 2: ")
     current_player = player1
@@ -87,8 +89,9 @@ def modoJogador():
                     imprimirTabuleiro(matriz)
                     print(f"Jogador {player1} venceu!")
                     win_player1 += 1
-                    matriz = m.copy()
-                current_player = player2
+                    matriz = copy.deepcopy(m)
+                else:
+                    current_player = player2
 
             else:
                 matriz[linha][coluna] = "O"
@@ -97,8 +100,9 @@ def modoJogador():
                     imprimirTabuleiro(matriz)
                     print(f"Jogador {player2} venceu!")
                     win_player2 += 1
-                    matriz = m.copy()
-                current_player = player1
+                    matriz = copy.deepcopy(m)
+                else:
+                    current_player = player1
 
         else:
             while matriz[linha][coluna] != " ":
@@ -107,22 +111,24 @@ def modoJogador():
                 coluna = leiaCoordenadaColuna(current_player)
             if current_player == player1:
                 matriz[linha][coluna] = "X"
-                if verificar_vencedor(matriz, "X"):
+                if verificar_vencedor(matriz, "X") == True:
                     imprimePontuacao(player1, player2, win_player1, win_player2)
                     imprimirTabuleiro(matriz)
                     print(f"Jogador {player2} venceu!")
                     win_player1 += 1
-                    matriz = m.copy()
-                current_player = player2
+                    matriz = copy.deepcopy(m)
+                else:
+                    current_player = player2
             else:
                 matriz[linha][coluna] = "O"
-                if verificar_vencedor(matriz, "O"):
+                if verificar_vencedor(matriz, "O") == True:
                     imprimePontuacao(player1, player2, win_player1, win_player2)
                     imprimirTabuleiro(matriz)
                     print(f"Jogador {player2} venceu!")
                     win_player2 += 1
-                    matriz = m.copy()
-                current_player = player1
+                    matriz = copy.deepcopy(m)
+                else:
+                    current_player = player1
         
         if win_player1 == 3 or win_player2 == 3:
             break
@@ -144,7 +150,8 @@ def posicaoValida(linha, coluna, m):
         return True
     else:
         return False
-    
+
+#Função para verificar se 
 def verificar_vencedor(tabuleiro, jogador):
     for i in range(3):
         if tabuleiro[i][0] == tabuleiro[i][1] == tabuleiro[i][2] == jogador:
@@ -158,7 +165,15 @@ def verificar_vencedor(tabuleiro, jogador):
     if tabuleiro[0][2] == tabuleiro[1][1] == tabuleiro[2][0] == jogador:
         return True
     return False
-    
+
+def verificarVelha(tabuleiro):
+    for linha in tabuleiro:
+        for elemento in linha:
+            if elemento == " ":
+                return False
+    return True
+
+#Função para imprimir a pontuação do jogador
 def imprimePontuacao(player1, player2, win_player1, win_player2):
     print(f"{player1}: {win_player1}       {player2}: {win_player2}")
 
