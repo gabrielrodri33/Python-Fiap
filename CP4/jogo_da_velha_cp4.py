@@ -66,22 +66,40 @@ def modoJogador():
         [" ", " ", " "]
     ]
 
+    win_player1 = win_player2 = 0
     matriz = m.copy()
     player1 = input("Digite o nome do jogador 1: ")
     player2 = input("Digite o nome do jogador 2: ")
     current_player = player1
+    clear_console()
 
     while True:
+        separador(18, 1)
+        imprimePontuacao(player1, player2, win_player1, win_player2)
         imprimirTabuleiro(matriz)
         linha = leiaCoordenadaLinha(current_player)
         coluna = leiaCoordenadaColuna(current_player)
-        if posicaoValida(linha, coluna, matriz) == True:    
+        if posicaoValida(linha, coluna, matriz) == True:
             if current_player == player1:
                 matriz[linha][coluna] = "X"
+                if verificar_vencedor(matriz, "X"):
+                    imprimePontuacao(player1, player2, win_player1, win_player2)
+                    imprimirTabuleiro(matriz)
+                    print(f"Jogador {player1} venceu!")
+                    win_player1 += 1
+                    matriz = m.copy()
                 current_player = player2
+
             else:
                 matriz[linha][coluna] = "O"
+                if verificar_vencedor(matriz, "O"):
+                    imprimePontuacao(player1, player2, win_player1, win_player2)
+                    imprimirTabuleiro(matriz)
+                    print(f"Jogador {player2} venceu!")
+                    win_player2 += 1
+                    matriz = m.copy()
                 current_player = player1
+
         else:
             while matriz[linha][coluna] != " ":
                 print("\033[91mPosição inválida!\033[0m")
@@ -89,11 +107,26 @@ def modoJogador():
                 coluna = leiaCoordenadaColuna(current_player)
             if current_player == player1:
                 matriz[linha][coluna] = "X"
+                if verificar_vencedor(matriz, "X"):
+                    imprimePontuacao(player1, player2, win_player1, win_player2)
+                    imprimirTabuleiro(matriz)
+                    print(f"Jogador {player2} venceu!")
+                    win_player1 += 1
+                    matriz = m.copy()
                 current_player = player2
             else:
                 matriz[linha][coluna] = "O"
+                if verificar_vencedor(matriz, "O"):
+                    imprimePontuacao(player1, player2, win_player1, win_player2)
+                    imprimirTabuleiro(matriz)
+                    print(f"Jogador {player2} venceu!")
+                    win_player2 += 1
+                    matriz = m.copy()
                 current_player = player1
-            
+        
+        if win_player1 == 3 or win_player2 == 3:
+            break
+        
         clear_console()
 
 def leiaCoordenadaLinha(player):
@@ -112,6 +145,23 @@ def posicaoValida(linha, coluna, m):
     else:
         return False
     
+def verificar_vencedor(tabuleiro, jogador):
+    for i in range(3):
+        if tabuleiro[i][0] == tabuleiro[i][1] == tabuleiro[i][2] == jogador:
+            return True
+
+        if tabuleiro[0][i] == tabuleiro[1][i] == tabuleiro[2][i] == jogador:
+            return True
+
+    if tabuleiro[0][0] == tabuleiro[1][1] == tabuleiro[2][2] == jogador:
+        return True
+    if tabuleiro[0][2] == tabuleiro[1][1] == tabuleiro[2][0] == jogador:
+        return True
+    return False
+    
+def imprimePontuacao(player1, player2, win_player1, win_player2):
+    print(f"{player1}: {win_player1}       {player2}: {win_player2}")
+
 # def jogadaUsuario():
 
 def modoFacil():
@@ -120,12 +170,14 @@ def modoFacil():
 def principal():
     modo = imprimeMenuPrincipal()
     if modo == "1":
+        clear_console()
         separador(28, 2)
-        print("Modo de jogo selecionado!!!")
+        print("Jogador vs. Máquina")
         modoFacil()
     else:
+        clear_console()
         separador(28, 2)
-        print("Modo de jogo selecionado!!!")
+        print("Jogador vs. jogador")
         modoJogador()
 
 # Programa principal

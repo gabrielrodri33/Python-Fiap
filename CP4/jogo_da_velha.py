@@ -93,6 +93,7 @@ def modoJogador(m):
                 print(f"Jogador {player} venceu!")
                 break
             player = player1
+            
         
         clear_console()
 
@@ -118,24 +119,17 @@ def verificarVelha():
     print()
 
 def verificar_vencedor(tabuleiro, jogador):
-    # Verificar linhas
-    for linha in tabuleiro:
-        if all(elemento == jogador for elemento in linha):
+    for i in range(3):
+        if tabuleiro[i][0] == tabuleiro[i][1] == tabuleiro[i][2] == jogador:
             return True
-    
-    # Verificar colunas
-    for coluna in range(len(tabuleiro)):
-        if all(tabuleiro[linha][coluna] == jogador for linha in range(len(tabuleiro))):
+
+        if tabuleiro[0][i] == tabuleiro[1][i] == tabuleiro[2][i] == jogador:
             return True
-    
-    # Verificar diagonal principal
-    if all(tabuleiro[i][i] == jogador for i in range(len(tabuleiro))):
+
+    if tabuleiro[0][0] == tabuleiro[1][1] == tabuleiro[2][2] == jogador:
         return True
-    
-    # Verificar diagonal secundária
-    if all(tabuleiro[i][len(tabuleiro) - 1 - i] == jogador for i in range(len(tabuleiro))):
+    if tabuleiro[0][2] == tabuleiro[1][1] == tabuleiro[2][0] == jogador:
         return True
-    
     return False
     
 
