@@ -1,5 +1,6 @@
 import os
 import copy
+import time
 
 def separador(n, cor):
     cores = {
@@ -55,7 +56,6 @@ def imprimirTabuleiro(tabuleiro):
         print("-" * 9)
 
 def imprimeMenuPrincipal():
-    clear_console()
     separador(28, 1)
     modoDeJogo = input(" xox JOGO DA VELHA xox\nDigite o número de acordo com o modo do jogo desejado:\n1- Jogador Vs. Máquina\n2- Jogador Vs. Jogador\n")
     modoDeJogo = validacao_dados(modoDeJogo, 1)
@@ -103,6 +103,14 @@ def modoJogador():
                     matriz = copy.deepcopy(m)
                 else:
                     current_player = player1
+                
+            if verificarVelha(matriz) == True:
+                imprimePontuacao(player1, player2, win_player1, win_player2)
+                imprimirTabuleiro(matriz)
+                print("Velha! Reiniciando o jogo...")
+                matriz = copy.deepcopy(m)
+                time.sleep(2)
+                clear_console()
 
         else:
             while matriz[linha][coluna] != " ":
@@ -129,11 +137,22 @@ def modoJogador():
                     matriz = copy.deepcopy(m)
                 else:
                     current_player = player1
+            
+            if verificarVelha(matriz) == True:
+                imprimePontuacao(player1, player2, win_player1, win_player2)
+                imprimirTabuleiro(matriz)
+                print("\033[93mVelha! Reiniciando o jogo...\033[0m")
+                matriz = copy.deepcopy(m)
+                time.sleep(2)
+                clear_console()
         
         if win_player1 == 3 or win_player2 == 3:
             break
         
         clear_console()
+
+def jogar(matriz, linha, coluna, x):
+    matriz[linha][coluna] = x
 
 def leiaCoordenadaLinha(player):
     coordenada_linha = input(f"{player} escolha uma linha (0, 1, 2): ")
@@ -176,8 +195,6 @@ def verificarVelha(tabuleiro):
 #Função para imprimir a pontuação do jogador
 def imprimePontuacao(player1, player2, win_player1, win_player2):
     print(f"{player1}: {win_player1}       {player2}: {win_player2}")
-
-# def jogadaUsuario():
 
 def modoFacil():
     print()
