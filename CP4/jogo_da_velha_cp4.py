@@ -83,7 +83,7 @@ def modoJogador():
         coluna = leiaCoordenadaColuna(current_player)
         if posicaoValida(linha, coluna, matriz) == True:
             if current_player == player1:
-                matriz[linha][coluna] = "X"
+                jogar(matriz, linha, coluna, "X")
                 if verificar_vencedor(matriz, "X"):
                     imprimePontuacao(player1, player2, win_player1, win_player2)
                     imprimirTabuleiro(matriz)
@@ -94,7 +94,7 @@ def modoJogador():
                     current_player = player2
 
             else:
-                matriz[linha][coluna] = "O"
+                jogar(matriz, linha, coluna, "O")
                 if verificar_vencedor(matriz, "O"):
                     imprimePontuacao(player1, player2, win_player1, win_player2)
                     imprimirTabuleiro(matriz)
@@ -118,7 +118,7 @@ def modoJogador():
                 linha = leiaCoordenadaLinha(current_player)
                 coluna = leiaCoordenadaColuna(current_player)
             if current_player == player1:
-                matriz[linha][coluna] = "X"
+                jogar(matriz, linha, coluna, "X")
                 if verificar_vencedor(matriz, "X") == True:
                     imprimePontuacao(player1, player2, win_player1, win_player2)
                     imprimirTabuleiro(matriz)
@@ -128,7 +128,7 @@ def modoJogador():
                 else:
                     current_player = player2
             else:
-                matriz[linha][coluna] = "O"
+                jogar(matriz, linha, coluna, "O")
                 if verificar_vencedor(matriz, "O") == True:
                     imprimePontuacao(player1, player2, win_player1, win_player2)
                     imprimirTabuleiro(matriz)
