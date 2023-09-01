@@ -64,46 +64,53 @@ def jogador_maquina():
     print('Vs. máquina')
 
 #Função do modo de jogo vs jogador
+
 def modoJogador(m):
     matriz = m.copy()
     player1 = input("Digite o nome do jogador 1: ")
-    player2= input("Digite o nome do jogador 2: ")
-    c=0
+    player2 = input("Digite o nome do jogador 2: ")
+    c = 0
     player = player1
     while True:
         imprimirTabuleiro(matriz)
-        linha = input(f"{player} escolha a linha (0, 1, 2): ")
-        linha = validacao_dados(linha, 2)
-        coluna = input(f"{player}, escolha a coluna (0, 1, 2): ")
-        coluna = validacao_dados(coluna, 3)
+        linha = leiaCoordenadaLinha()
+        coluna = leiaCoordenadaColuna()
 
-        if player == player1 and matriz[linha][coluna] == " ":
+        while matriz[linha][coluna] != " ":
+            print("\033[91mPosição já ocupada. Escolha novamente:\033[0m")
+            linha = leiaCoordenadaLinha()
+            coluna = leiaCoordenadaColuna()
+
+        if player == player1:
             matriz[linha][coluna] = "X"
-            if verificar_vencedor(matriz, player):
+            if verificar_vencedor(matriz, player) is True:
                 print(f"Jogador {player} venceu!")
                 break
-        
-        elif player == player2 and matriz[linha][coluna] == " ":
+            player = player2
+        elif player == player2:
             matriz[linha][coluna] = "O"
             if verificar_vencedor(matriz, player):
                 print(f"Jogador {player} venceu!")
                 break
-
-        else: 
-            linha = input("\033[91mPosição inválida\033[0m, escolha a linha (0, 1, 2): ")
-            linha = validacao_dados(linha, 2)
-            coluna = input("\033[91mPosição inválida\033[0m, escolha a coluna (0, 1, 2): ")
-            coluna = validacao_dados(coluna, 3)
-
-
-        if player == player1:
-            player = player2
-        elif player == player2:
             player = player1
-    
+        
         clear_console()
 
+def leiaCoordenadaLinha():
+    while True:
+        linha = input("escolha a linha (0, 1, 2): ")
+        if linha.isdigit() and 0 <= int(linha) <= 2:
+            return int(linha)
+        else:
+            print("Linha inválida. Tente novamente.")
 
+def leiaCoordenadaColuna():
+    while True:
+        coluna = input("Escolha a coluna (0, 1, 2): ")
+        if coluna.isdigit() and 0 <= int(coluna) <= 2:
+            return int(coluna)
+        else:
+            print("Coluna inválida. Tente novamente.")
 
 
 
