@@ -1,6 +1,8 @@
 #merge sort - Ordenação por intercalação (mistura)
 #complexidade: 0(n*log(n))
 
+import random
+
 def merge_sort(lista):
     if len(lista)>1 :
 
@@ -43,7 +45,11 @@ def merge_sort(lista):
             k += 1
 
 #Programa principal
-lista = [22, 11, 13, 5, 6, 7]
+lista = []
+o = 0
+while o < 100000000: 
+    lista.append(random.randint(0,100)) 
+    o += 1
 print(f"Lista original: {lista}")
 merge_sort(lista)
 print(f"Lista ordenada: {lista}")
