@@ -16,7 +16,7 @@ def selection_sort(seq):
 #Programa principal
 lista = []
 o = 0
-while o < 100000000: 
+while o < 100000: 
     lista.append(random.randint(0,100)) 
     o += 1
 print(f"Lista original: {lista}")
