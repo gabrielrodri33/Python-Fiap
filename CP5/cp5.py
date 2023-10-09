@@ -1,6 +1,7 @@
 import time
 import os
 import criar_listas
+import webbrowser
 
 def clear_console():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -36,6 +37,8 @@ def bubble_sort(lista):
         for j in range(0, n-i-1):
             if lista[j] > lista[j+1]:
                 lista[j], lista[j+1] = lista[j+1], lista[j]
+                
+    return lista
 
 def selection_sort(seq):
     for i in range(len(seq)):
@@ -43,6 +46,7 @@ def selection_sort(seq):
         for j in range(i+1, len(seq)):
             if seq[j] < seq[min_index]:
                 seq[j], seq[min_index] = seq[min_index], seq[j]
+    return seq
 
 def insertion_sort(lista):
     for i in range (1, len(lista)):
@@ -52,6 +56,7 @@ def insertion_sort(lista):
             lista[j+1] = lista[j]
             j = j - 1
         lista[j+1] = pivo
+    return lista
 
 def merge_sort(lista):
     if len(lista)>1 :
@@ -83,6 +88,7 @@ def merge_sort(lista):
             lista[k] = direita[j]
             j += 1
             k += 1
+    return lista
 
 def validacao(var, tipo):
     if tipo == 1:
@@ -118,6 +124,12 @@ def carregarListas():
 def menuPrincipal():
     listas = carregarListas()
     separador(21, 1)
+    metodo = input("Escolha o método que deseja utilizar\n1- Bubble Sort\n2- Selection Sort\n3- Insertion Sort\n4- Merge Sort\n").strip()
+    metodo = validacao(metodo, 2)
+
+    clear_console()
+    separador(21, 2)
+
     tamLista = input("Escolha o tamanho da lista\n1- 10 mil\n2- 100 mil\n3- 500 mil\n4- 1 milhão\n5- 5 milhões\n").strip()
     tamLista = validacao(tamLista, 1)
 
@@ -136,48 +148,38 @@ def menuPrincipal():
     elif tamLista == "5":
         listaDesordenada = listas[4]
     
-    clear_console()
-    separador(21, 2)
-
-    metodo = input("Escolha o método que deseja utilizar\n1- Bubble Sort\n2- Selection Sort\n3- Insertion Sort\n4- Merge Sort\n").strip()
-    metodo = validacao(metodo, 2)
-
     print('Iniciando ordenação')
     inicio = time.time()
 
     if metodo == "1":
+        nome = "Bubble Sort"
         listaOrdenada = bubble_sort(listaDesordenada)
         fim = time.time()
 
     elif metodo == "2":
+        nome = "Selection Sort"
         listaOrdenada = selection_sort(listaDesordenada)
         fim = time.time()
     
     elif metodo == "3":
+        nome = "Insertion Sort"
         listaOrdenada = insertion_sort(listaDesordenada)
         fim = time.time()
     
     elif metodo == "4":
+        nome = "Merge Sort"
         listaOrdenada = merge_sort(listaDesordenada)
         fim = time.time()
         
     print(f'Tempo de ordenação: {fim-inicio:.3f} segundos')
-
+    print(f'Nome do algoritmo: {nome}')
     
 
 def principal():
     clear_console()
     menuPrincipal()
+    # url = "https://www.youtube.com/watch?v=ePjtnSPFWK8"
+    # webbrowser.open(url)
 
 #Programa principal
 principal()
-
-
-
-# lista = [1,2,3,4,5,6,1,3,5,6,2,4,56,1,1,3,8,9,53,4,5,7,2,1]
-
-# merge_sort(lista)
-# get_time(1)
-# print(lista)
-
-# print(get_time(1000000))
