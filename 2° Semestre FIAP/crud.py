@@ -38,8 +38,8 @@ def update():
     except Exception as e:
         print(f'Something went wrong - update: {e}')
     finally:
-        
         conn.close()
+        cursor.close()###########
 
 def delete():
     try:
