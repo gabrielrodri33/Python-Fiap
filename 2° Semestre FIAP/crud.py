@@ -1,10 +1,12 @@
 import cx_Oracle
 #import oracledb
 
+numero = 2
+
 #Obter conexao
 def conexao():
     try:
-        conn = cx_Oracle.connect(user="RM98626", password="311003", host="oracle.fiap.com.br", port="1521", 
+        conn = cx_Oracle.connect(user="xxxxxxx", password="xxxxxx", host="oracle.fiap.com.br", port="1521", 
                                  service_name="orcl")
         print(f"Conexão: {conn.version}")
     except Exception as e:
@@ -39,7 +41,7 @@ def update():
         print(f'Something went wrong - update: {e}')
     finally:
         conn.close()
-        cursor.close()###########
+        cursor.close()
 
 def delete():
     try:

@@ -23,7 +23,7 @@ import cx_Oracle
 
 #Create connection
 
-conn = cx_Oracle.connect(user="RM98626", password="311003", host="oracle.fiap.com.br", port="1521", service_name="orcl")
+conn = cx_Oracle.connect(user="xxxxxx", password="xxxxxx", host="oracle.fiap.com.br", port="1521", service_name="orcl")
 # conn = cx_Oracle.connect(user="RM98626", password="311003", host="oracle.fiap.com.br/orcl")
 print(conn.version)
 
