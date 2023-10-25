@@ -1,10 +1,10 @@
 import oracledb
 import getpass
+import credenciais
 
 def conexao():
     try:
-        user = getpass.getpass("User: ")
-        pwd = getpass.getpass("Password: ")
+        user, pwd = credenciais.credenciais()
         conn = oracledb.connect(user=user, password=pwd, host="oracle.fiap.com.br", port="1521", service_name="orcl")
         cursor = conn.cursor()
         # print(f"Conexão {conn.version}")
@@ -14,31 +14,82 @@ def conexao():
 
 def create():
     try:
-        conn, cursor =  conexao()
-        cursor.execute("SELECT table_name FROM user_tables WHERE table_name = 'tbl_cliente'")
-        result = cursor.fetchone()
+        conn, cursor = conexao()
+        sql_query_cliente = """
+                            CREATE TABLE cliente (
+                                cpf         VARCHAR2(15) NOT NULL,
+                                nome        VARCHAR2(100) NOT NULL,
+                                dt_nasc     DATE NOT NULL,
+                                tel_fixo    VARCHAR2(15),
+                                tel_celular VARCHAR2(15),
+                                email       VARCHAR2(100) NOT NULL,
+                                CONSTRAINT cliente_pk PRIMARY KEY (cpf)
+                            )"""
 
-        if result is None:
-            cursor.execute("DROP TABLE tbl_cliente")
+        sql_query_bike_modelos = """
+                            CREATE TABLE bike_modelos (
+                                id_modelo   INTEGER NOT NULL,
+                                nome        VARCHAR2(255) NOT NULL,
+                                valor_aprox NUMBER(18, 2),
+                                CONSTRAINT bike_modelos_pk PRIMARY KEY (id_modelo)
+                            )"""
 
-        sql_query = """
-                    CREATE TABLE tbl_cliente(
-                        fis_jur_cliente        NUMBER(11)     NOT NULL    PRIMARY KEY,
-                        nome_cliente           VARCHAR2(45)   NOT NULL,
-                        dt_nasc_cliente        DATE           NOT NULL,
-                        tel_fixo_cliente       NUMBER(8),
-                        tel_celular_cliente    NUMBER(11)     NOT NULL,
-                        email_cliente          VARCHAR2(50)   NOT NULL
-                    )
-                    """
+        sql_query_bikes = """
+                            CREATE TABLE bikes (
+                                num_serie              VARCHAR2(255) NOT NULL,
+                                valor                  NUMBER(18, 2) NOT NULL,
+                                cor                    VARCHAR2(255) NOT NULL,
+                                bike_modelos_id_modelo INTEGER NOT NULL,
+                                CONSTRAINT bikes_pk PRIMARY KEY (num_serie),
+                                CONSTRAINT bikes_bike_modelos_fk FOREIGN KEY (bike_modelos_id_modelo) REFERENCES bike_modelos (id_modelo)
+                            )"""
 
-        cursor.execute(sql_query)
+        sql_query_vistoria = """
+                            CREATE TABLE vistoria (
+                                id_vistoria     INTEGER NOT NULL,
+                                dt_inicio       DATE NOT NULL,
+                                dt_fim          DATE,
+                                aprov           CHAR(1) NOT NULL,
+                                obs             CLOB,
+                                bikes_num_serie VARCHAR2(255) NOT NULL,
+                                cliente_cpf     VARCHAR2(15) NOT NULL,
+                                CONSTRAINT vistoria_pk PRIMARY KEY (id_vistoria),
+                                CONSTRAINT vistoria_bikes_fk FOREIGN KEY (bikes_num_serie) REFERENCES bikes (num_serie),
+                                CONSTRAINT vistoria_cliente_fk FOREIGN KEY (cliente_cpf) REFERENCES cliente (cpf)
+                            )"""
+
+        sql_query_imagens = """
+                            CREATE TABLE imagens (
+                                id_img               INTEGER NOT NULL,
+                                img                  VARCHAR2(255) NOT NULL,
+                                vistoria_id_vistoria INTEGER NOT NULL,
+                                CONSTRAINT imagens_pk PRIMARY KEY (id_img),
+                                CONSTRAINT imagens_vistoria_fk FOREIGN KEY (vistoria_id_vistoria) REFERENCES vistoria (id_vistoria)
+                            )"""
+
+        sql_query_videos = """
+                            CREATE TABLE videos (
+                                id_videos            INTEGER NOT NULL,
+                                video                VARCHAR2(255) NOT NULL,
+                                vistoria_id_vistoria INTEGER NOT NULL,
+                                CONSTRAINT videos_pk PRIMARY KEY (id_videos),
+                                CONSTRAINT videos_vistoria_fk FOREIGN KEY (vistoria_id_vistoria) REFERENCES vistoria (id_vistoria)
+                            )"""
+
+        cursor.execute(sql_query_cliente)
+        cursor.execute(sql_query_bike_modelos)
+        cursor.execute(sql_query_bikes)
+        cursor.execute(sql_query_vistoria)
+        cursor.execute(sql_query_imagens)
+        cursor.execute(sql_query_videos)
+
         conn.commit()
-        # print("Tabela criada com sucesso!")
+        print("Tabelas criadas com sucesso!")
     except Exception as e:
         print(f'Something went wrong - create: {e}')
     finally:
         conn.close()
+
 
 def insert(cpf, nome, dt_nasc, tel_fixo, tel_celular, email):
     try:
@@ -82,4 +133,5 @@ def delete(cpf):
     finally:
         conn.close()
 
-conexao()
+#Programa principal
+create()
