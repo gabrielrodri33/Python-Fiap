@@ -57,11 +57,11 @@ def validacao(dado):
 
     return option
 
-def formatarData(data):
-
+def formatarData():
+    data  = input("Data de nascimento dd/mm/yyyy: ").strip().replace('/', '')
     while True:
         if len(data) != 8:
-            print(separador('Erro!', 6), end='')
+            separador('Erro!', 7)
             data = input(' Quantidades de caracteres diferente de 8!\nData de nascimento dd/mm/aaaa: ').replace('/', '').replace(' ', '')
             continue 
 
@@ -87,8 +87,20 @@ def formatarCell():
     pass
 
 def formatarTelefone():
-    pass
-    
+    tel = input("Telefone fixo xxxx-xxxx: ").replace("-",'').strip()
+
+    while len(tel) != 8:
+        separador("Entrada inválida!", 7)
+        tel = input("\nTelefone fixo xxxx-xxxx: ").replace("-",'').strip()
+
+    # while True:
+    #     try:
+    #         tel = int(tel)
+    #         break
+    #     except:
+
+    return f'{tel[:4]}-{tel[4:]}'
+
 def salvarCredenciais(email, senha):
     try:
         dados_login = carregarLista("clientes.json")
@@ -134,6 +146,7 @@ def menuPrincipal():
             dt_nasc = formatarData()
             tel_fixo = formatarTelefone()
             tel_celular = formatarCell()
+            print(tel_fixo)
 
 def principal():
     clearconsole.clear_console()
