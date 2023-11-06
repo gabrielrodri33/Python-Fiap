@@ -1,8 +1,15 @@
-import db
-import clearconsole
+# import db
+# import neverbounce_sdk
+# import bcrypt
 import json
 import getpass
 import datetime
+import os
+import smtplib
+from email.mime.text import MIMEText
+
+def clear_console():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 def separador(n, cor):
     cores = {
@@ -14,23 +21,23 @@ def separador(n, cor):
     }
 
     if cor == 1:
-        mensagem = print(f'{cores[1]["azul"]}-={cores[1]["limpa"]}' * n)
+        mensagem = f'{cores[1]["azul"]}-={cores[1]["limpa"]}' * n
 
     elif cor == 2:
-        mensagem = print(f'{cores[2]["verde"]}-={cores[2]["limpa"]}' * n)
+        mensagem = f'{cores[2]["verde"]}-={cores[2]["limpa"]}' * n
 
     elif cor == 3:
-        mensagem = print(f'{cores[3]["roxo"]}-={cores[3]["limpa"]}' * n)
+        mensagem = f'{cores[3]["roxo"]}-={cores[3]["limpa"]}' * n
 
     elif cor == 5:
-        mensagem = print(f'{cores[5]["vermelho"]}-={cores[5]["limpa"]}' * n)
+        mensagem = f'{cores[5]["vermelho"]}-={cores[5]["limpa"]}' * n
 
     elif cor == 6:
-        mensagem = print(f'{cores[4]["amarelo"]}-={cores[4]["limpa"]}' * n)
+        mensagem = f'{cores[4]["amarelo"]}-={cores[4]["limpa"]}' * n
     
     elif cor == 7:
-        mensagem = print(f'{cores[5]["vermelho"]}{n}{cores[5]["limpa"]}', end="")
-    return mensagem
+        mensagem = f'{cores[5]["vermelho"]}{n}{cores[5]["limpa"]}'
+    return print(mensagem)
 
 def validacao(dado):
     status = False
@@ -44,17 +51,22 @@ def validacao(dado):
                     status = True
 
                 else:
-                    clearconsole.clear_console()
+                    clear_console()
                     separador(30, 1)
                     separador("Entrada inválida!", 7)
                     print(" Por favor escolha uma opção de 1 a 7!")
 
             except ValueError:
-                clearconsole.clear_console()
+                clear_console()
                 separador(30, 1)
                 separador("Entrada inválida!", 7)
                 print(" Por favor insira um número")
 
+    elif dado == 2:
+        while not status:
+            try:
+                separador(30, 2)
+                mudanca = int(input('Se todas informações estiverem corretas digite 0\nSe não digite o número que deseja mudar: '))
     return option
 
 def formatarData():
@@ -84,7 +96,13 @@ def formatarData():
     return f'{data[:2]}/{data[2:4]}/{data[4:]}'
 
 def formatarCell():
-    pass
+    cell = input("Celular (xx)xxxxx-xxxx: ").replace("(","").replace(")", "").replace("-", "").replace(" ", "")
+
+    while len(cell) != 11:
+        separador("Entrada inválida!", 7)
+        cell = input("Celular (xx)xxxxx-xxxx: ").replace("(","").replace(")", "").replace("-", "").replace(" ", "")
+
+    return f'({cell[:2]}) {cell[2:7]}-{cell[7:]}'
 
 def formatarTelefone():
     tel = input("Telefone fixo xxxx-xxxx: ").replace("-",'').strip()
@@ -117,9 +135,52 @@ def carregarLista(nome):
     with open(nome, "r") as arquivo:
         return json.load(arquivo)
 
+def verificaçãoEmail(email):
+    server_smtp = "smtp.gmail.com"
+    smtp_port = 587
+
+    sender = "gabrielkeeper2@gmail.com"
+    receiver = email
+    topic = "Verificação de email"
+    body = "Código"
+
+    message = MIMEText(body)
+    message['Subject'] = topic
+    message['From'] = sender
+    message['To'] = receiver
+
+    server = smtplib.SMTP(server_smtp, smtp_port)
+    server.starttls()
+    user = "bikevision083@gmail.com"
+    pwd = "Fiap2023"
+    server.login(user, pwd)
+
+    server.sendmail(sender, receiver, message.as_string())
+
+    server.quit()
+
+def addDict(dicionario, nome, email, dt_nasc, tel_fixo, tel_celular, cpf):
+    dicionario = {
+        "nome": nome,
+        "email": email,
+        "cpf": cpf,
+        "data_nascimento": dt_nasc,
+        "telefone_fixo": tel_fixo,
+        "telefone_celular": tel_celular
+    }
+
+    return dicionario
+
+def formatarCpf():
+    cpf = input("CPF: ")
+    while len(cpf) > 11 or len(cpf) < 11:
+        print(separador('CPF inválido!', 6), end='')
+        cpf = input(f', deve conter 11 caracteres\nDigite seu CPF: ').replace('.', '').replace('-', '').replace(' ', '')
+    return f'{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}'
+
 def menuPrincipal():
     option = validacao(1)
-    clearconsole.clear_console()
+    clear_console()
 
     match option:
         case 1:
@@ -131,7 +192,8 @@ def menuPrincipal():
                 print("Logado")
         
         case 2:
-            clearconsole.clear_console()
+            dados_cliente = {}
+            clear_console()
             separador(30, 3)
             nome = input("Nome: ")
             email = input("Email: ")
@@ -140,16 +202,52 @@ def menuPrincipal():
 
             while senha != confirma:
                 separador("Senhas diferentes!", 7)
-                senha = getpass.getpass("\nSenha: ")
+                senha = getpass.getpass("Senha: ")
                 confirma = getpass.getpass("Confirme a senha: ") 
+
             salvarCredenciais(email, senha)
+            cpf = formatarCpf()
             dt_nasc = formatarData()
             tel_fixo = formatarTelefone()
             tel_celular = formatarCell()
-            print(tel_fixo)
+            dados_cliente = addDict(dados_cliente, nome, email, dt_nasc, tel_fixo, tel_celular, cpf)
+
+            clear_console()
+            separador(30, 2)
+            print(f'1- Nome: {dados_cliente["nome"]}\n2- CPF: {cpf}\n3- Data de nascimento: {dados_cliente["data_nascimento"]}\n4- Telefone fixo: {dados_cliente["telefone_fixo"]}\n5- Telefone celular: {dados_cliente["telefone_celular"]}\n6- Email: {dados_cliente["email"]}')
+            mudanca = input('Se todas informações estiverem corretas digite 0\nSe não digite o número que deseja mudar: ').strip()
+            while mudanca != '0':
+                mudanca = validacao(mudanca, 1, dados_cliente)
+                if mudanca == '1':
+                    nome = input('Nome: ').strip().title()
+                    dados_cliente[cpf]["nome"] = nome
+
+                elif mudanca == '2':
+                    cpf = input('CPF: ')
+                    cpf_formatado = formatarCpf(cpf)
+                    dados_cliente[cpf]["cpf"] = cpf_formatado
+
+                elif mudanca == '3':
+                    dt_nasc = input('Data de nascimento: ')
+                    data_formatada = formatarData(dt_nasc)
+                    dados_cliente[cpf]["data_nascimento"] = data_formatada
+
+                elif mudanca == '4': 
+                    telefone_fixo = input('Telefone fixo: ')
+                    dados_cliente[cpf]["telefone_fixo"] = telefone_fixo
+
+                elif mudanca == '5':
+                    celular = input('Celular: ')
+                    dados_cliente[cpf]["telefone_celular"] = celular
+
+                elif mudanca == '6':
+                    email = input('Email: ')
+                    dados_cliente[cpf]["email"] = email
+
+
 
 def principal():
-    clearconsole.clear_console()
+    clear_console()
     menuPrincipal()
 
 #Programa principal
