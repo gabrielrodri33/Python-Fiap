@@ -90,7 +90,6 @@ def create():
     finally:
         conn.close()
 
-
 def insert(cpf, nome, dt_nasc, tel_fixo, tel_celular, email):
     try:
         conn, cursor = conexao()
