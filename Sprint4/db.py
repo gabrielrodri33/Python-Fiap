@@ -1,6 +1,6 @@
 import oracledb
-import getpass
 import credenciais
+from datetime import datetime
 
 def conexao():
     try:
@@ -93,8 +93,18 @@ def create():
 def insert(cpf, nome, dt_nasc, tel_fixo, tel_celular, email):
     try:
         conn, cursor = conexao()
-        sql_query = f"INSERT INTO tbl_cliente VALUES({cpf}, '{nome}', TO_DATE('{dt_nasc}', 'YYYY-MM-DD'), {tel_fixo}, {tel_celular}, '{email}')"
-        cursor.execute(sql_query)
+
+        dt_nasc_formatada = datetime.strptime(dt_nasc, '%d/%m/%Y').strftime('%Y-%m-%d')
+
+        sql_query = "INSERT INTO cliente (cpf, nome, dt_nasc, tel_fixo, tel_celular, email) VALUES (:cpf, :nome, TO_DATE(:dt_nasc, 'YYYY-MM-DD'), :tel_fixo, :tel_celular, :email)"
+        cursor.execute(sql_query, {
+            'cpf': cpf,
+            'nome': nome,
+            'dt_nasc': dt_nasc_formatada,
+            'tel_fixo': tel_fixo,
+            'tel_celular': tel_celular,
+            'email': email
+        })
         conn.commit()
         print("Cadastro realizado com sucesso!")
     except Exception as e:
@@ -123,7 +133,7 @@ def update(table, dado, value, cpf):
 def delete(cpf):
     try:
         conn, cursor = conexao()
-        sql_query = (f"DELETE FROM tbl_cliente WHERE fis_jur_cliente = {cpf}")
+        sql_query = (f"DELETE FROM cliente WHERE fis_jur_cliente = {cpf}")
         cursor.execute(sql_query)
         conn.commit()
         print("Usuário deletado com sucesso!")
