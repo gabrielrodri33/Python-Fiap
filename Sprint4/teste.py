@@ -1,30 +1,10 @@
-import smtplib
-from email.mime.text import MIMEText
+import bcrypt
+import getpass
 
-def verificacaoEmail():
-    server_smtp = "smtp.gmail.com"
-    smtp_port = 587
+password = getpass.getpass("Senha: ").encode("utf-8")
+hashed = bcrypt.hashpw(password, bcrypt.gensalt())
 
-    sender = "gabrielrodri333@gmail.com"
-    receiver = "gabrielkeeper2@gmail.com"
-    topic = "Verificação de email"
-    body = "Código"
-
-    message = MIMEText(body)
-    message['Subject'] = topic
-    message['From'] = sender
-    message['To'] = receiver
-
-    server = smtplib.SMTP(server_smtp, smtp_port)
-    server.starttls()
-    username = "gabrielrodri333@gmail.com"
-    password = "Fiap2023"
-    server.login(username, password)
-
-    server.sendmail(sender, receiver, message.as_string())
-
-    server.quit()
-
-    print('Email enviado!')
-
-verificacaoEmail()
+if bcrypt.checkpw(password, hashed):
+    print("It Matches!")
+else:
+    print("It Does not Match :(")
