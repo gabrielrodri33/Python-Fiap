@@ -1,12 +1,11 @@
-# import db
+import db
 # import neverbounce_sdk
-# import bcrypt
+import bcrypt
 import json
+import base64
 import getpass
 import datetime
 import os
-import smtplib
-from email.mime.text import MIMEText
 
 def clear_console():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -67,6 +66,11 @@ def validacao(dado):
             try:
                 separador(30, 2)
                 mudanca = int(input('Se todas informações estiverem corretas digite 0\nSe não digite o número que deseja mudar: '))
+
+                if 1 <= mudanca <=7:
+                    status = True
+            except:
+                pass
     return option
 
 def formatarData():
@@ -135,30 +139,6 @@ def carregarLista(nome):
     with open(nome, "r") as arquivo:
         return json.load(arquivo)
 
-def verificaçãoEmail(email):
-    server_smtp = "smtp.gmail.com"
-    smtp_port = 587
-
-    sender = "gabrielkeeper2@gmail.com"
-    receiver = email
-    topic = "Verificação de email"
-    body = "Código"
-
-    message = MIMEText(body)
-    message['Subject'] = topic
-    message['From'] = sender
-    message['To'] = receiver
-
-    server = smtplib.SMTP(server_smtp, smtp_port)
-    server.starttls()
-    user = "bikevision083@gmail.com"
-    pwd = "Fiap2023"
-    server.login(user, pwd)
-
-    server.sendmail(sender, receiver, message.as_string())
-
-    server.quit()
-
 def addDict(dicionario, nome, email, dt_nasc, tel_fixo, tel_celular, cpf):
     dicionario = {
         "nome": nome,
@@ -178,6 +158,21 @@ def formatarCpf():
         cpf = input(f', deve conter 11 caracteres\nDigite seu CPF: ').replace('.', '').replace('-', '').replace(' ', '')
     return f'{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}'
 
+def pwd():
+    password = getpass.getpass("Senha: ").encode("utf-8")
+    confirm_password = getpass.getpass("Confirmar senha: ").encode("utf-8")
+
+    while password != confirm_password:
+        separador("Senhas diferentes!", 7)
+        password = getpass.getpass("Senha: ").encode("utf-8")
+        confirm_password = getpass.getpass("Confirmar senha: ").encode("utf-8") 
+
+    code = base64.b64encode(password).decode('utf-8')
+
+    hashed = bcrypt.hashpw(password, bcrypt.gensalt())
+
+    return hashed, code
+
 def menuPrincipal():
     option = validacao(1)
     clear_console()
@@ -186,30 +181,27 @@ def menuPrincipal():
         case 1:
             dados_login = carregarLista("clientes.json")
             email = input("Email: ") 
-            senha = input("Senha: ")
+            senha = getpass.getpass("Senha: ").encode("utf-8")
+            senha = base64.b64encode(senha).decode("utf-8")
             
-            if email in dados_login:
+            if email in dados_login and dados_login[email] == senha:
                 print("Logado")
         
+            email, senha = ""
         case 2:
             dados_cliente = {}
             clear_console()
             separador(30, 3)
             nome = input("Nome: ")
             email = input("Email: ")
-            senha = getpass.getpass("Senha: ")
-            confirma = getpass.getpass("Confirme a senha: ")
+            senha, senha_codificada = pwd()
 
-            while senha != confirma:
-                separador("Senhas diferentes!", 7)
-                senha = getpass.getpass("Senha: ")
-                confirma = getpass.getpass("Confirme a senha: ") 
-
-            salvarCredenciais(email, senha)
+            salvarCredenciais(email, senha_codificada)
             cpf = formatarCpf()
             dt_nasc = formatarData()
             tel_fixo = formatarTelefone()
             tel_celular = formatarCell()
+            db.insert(cpf, nome, dt_nasc, tel_fixo, tel_celular, email)
             dados_cliente = addDict(dados_cliente, nome, email, dt_nasc, tel_fixo, tel_celular, cpf)
 
             clear_console()
