@@ -6,6 +6,9 @@ import base64
 import getpass
 import datetime
 import os
+import re
+import webbrowser
+from api import viacep
 
 def clear_console():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -53,7 +56,7 @@ def validacao(dado):
                     clear_console()
                     separador(30, 1)
                     separador("Entrada inválida!", 7)
-                    print(" Por favor escolha uma opção de 1 a 7!")
+                    print("Por favor escolha uma opção de 1 a 7!")
 
             except ValueError:
                 clear_console()
@@ -69,8 +72,29 @@ def validacao(dado):
 
                 if 1 <= mudanca <=7:
                     status = True
-            except:
-                pass
+            except ValueError as e:
+                print(f"Error: {e}")
+
+    elif dado == 3:
+        while not status:
+            try:
+                separador(30, 3)
+                option = input("Deseja fazer cadastro? [S/N] ").strip().upper()
+                if option in ["S", "N"]:
+                    status = True
+            except ValueError as e:
+                print(f"Error: {e}")
+
+    elif dado == 4:
+        while not status:
+            try:
+                option = input("Informações corretas? [S/N]").strip().upper()
+                if option in ["S", "N"]:
+                    status = True
+            except ValueError as e:
+                print(f"Error: {e}")
+
+
     return option
 
 def formatarData():
@@ -126,7 +150,6 @@ def formatarTelefone():
 def salvarCredenciais(email, senha):
     try:
         dados_login = carregarLista("clientes.json")
-
     except FileNotFoundError:
         dados_login = {}
 
@@ -173,68 +196,187 @@ def pwd():
 
     return hashed, code
 
+def validaEmail():
+    status = False
+    verifica = False
+    regex = r'^[\w\.-]+@[\w\.-]+\.\w+'
+
+    while True:
+        email = input("Email: ")
+        if re.match(regex, email):
+            status = True
+        else:
+            separador("Email inválido!", 7)
+            print("Exemplo: usuario@example.com")
+            status = False
+            
+        if db.verifica_email_existente(email):
+            verifica = False
+        else:
+            verifica = True
+        
+        if status == True and verifica == True:
+            break
+
+    return email
+
+def logarEmail():
+    status = False
+    regex = r'^[\w\.-]+@[\w\.-]+\.\w+'
+
+    while status == False:
+        email = input("Email: ")
+        if re.match(regex, email):
+            status = True
+        else:
+            separador("Email inválido!", 7)
+            print("Exemplo: usuario@example.com")
+
+    return email
+
+def centralizar(texto):
+    largura = 60
+    texto_formatado = texto.center(largura)
+
+    return print(texto_formatado)
+
+def consultaCep():
+    cep = input("Informe seu CEP!\nCaso não saiba apenas tecle ENTER!\nCEP: ").replace(" ", "").replace(".", "").replace("-", "")
+
+    while len(cep) != 8 or not cep.isdigit():
+        separador("Inválido!", 7)
+        cep = input("Informe seu CEP!\nCaso não saiba apenas tecle ENTER!\nCEP: ").replace(" ", "").replace(".", "").replace("-", "")
+    
+    if cep == "":
+        link = "https://buscacepinter.correios.com.br/app/endereco/index.php"
+        webbrowser.open(link)
+        cep = input("CEP: ")
+    
+    cep, dic = viacep.cep(cep)
+
+    return cep, dic
+
 def menuPrincipal():
     option = validacao(1)
     clear_console()
+    status = False
+    login = False
+    while True:
+        match option:
+            case 1:
+                c = 0
+                dados_login = carregarLista("clientes.json")
+                while status == False:
+                    separador(30, 3)
+                    email = logarEmail()
+                    senha = getpass.getpass("Senha: ").encode("utf-8")
+                    senha = base64.b64encode(senha).decode("utf-8")
+                    
+                    if email in dados_login and dados_login[email] == senha:
+                        status = True
+                        login = True
+                    else:
+                        clear_console()
+                        separador(30, 3)
+                        separador("Email ou senha incorretos!", 7)
+                        c += 1
+                
+                    if c == 3:
+                        print("Limite de tentativas atingido!")
+                        option = validacao(3)
+                        if option == "S":
+                            option = 2
+                            print(option)
 
-    match option:
-        case 1:
-            dados_login = carregarLista("clientes.json")
-            email = input("Email: ") 
-            senha = getpass.getpass("Senha: ").encode("utf-8")
-            senha = base64.b64encode(senha).decode("utf-8")
-            
-            if email in dados_login and dados_login[email] == senha:
-                print("Logado")
-        
-            email, senha = ""
-        case 2:
-            dados_cliente = {}
-            clear_console()
-            separador(30, 3)
-            nome = input("Nome: ")
-            email = input("Email: ")
-            senha, senha_codificada = pwd()
+                email = ""
+                senha = ""
+                if status == True:
+                    clear_console()
+                    separador(30,1)
+                    centralizar("Logado!")
+                    option = validacao(1)
+                    
 
-            salvarCredenciais(email, senha_codificada)
-            cpf = formatarCpf()
-            dt_nasc = formatarData()
-            tel_fixo = formatarTelefone()
-            tel_celular = formatarCell()
-            db.insert(cpf, nome, dt_nasc, tel_fixo, tel_celular, email)
-            dados_cliente = addDict(dados_cliente, nome, email, dt_nasc, tel_fixo, tel_celular, cpf)
+            case 2:
+                dados_cliente = {}
+                clear_console()
+                separador(30, 3)
+                nome = input("Nome: ")
+                email = validaEmail()
+                senha, code = pwd()
 
-            clear_console()
-            separador(30, 2)
-            print(f'1- Nome: {dados_cliente["nome"]}\n2- CPF: {cpf}\n3- Data de nascimento: {dados_cliente["data_nascimento"]}\n4- Telefone fixo: {dados_cliente["telefone_fixo"]}\n5- Telefone celular: {dados_cliente["telefone_celular"]}\n6- Email: {dados_cliente["email"]}')
-            mudanca = input('Se todas informações estiverem corretas digite 0\nSe não digite o número que deseja mudar: ').strip()
-            while mudanca != '0':
-                mudanca = validacao(mudanca, 1, dados_cliente)
-                if mudanca == '1':
-                    nome = input('Nome: ').strip().title()
-                    dados_cliente[cpf]["nome"] = nome
+                salvarCredenciais(email, code)
+                cpf = formatarCpf()
+                dt_nasc = formatarData()
+                tel_fixo = formatarTelefone()
+                tel_celular = formatarCell()
+                db.insert(cpf, nome, dt_nasc, tel_fixo, tel_celular, email, senha)
+                dados_cliente = addDict(dados_cliente, nome, email, dt_nasc, tel_fixo, tel_celular, cpf)
 
-                elif mudanca == '2':
-                    cpf = input('CPF: ')
-                    cpf_formatado = formatarCpf(cpf)
-                    dados_cliente[cpf]["cpf"] = cpf_formatado
+                clear_console()
+                separador(30,3)
+                while True:
+                    cep, endereco = consultaCep()
+                    logradouro = endereco['logradouro']
+                    bairro = endereco['bairro']
+                    localidade = endereco['localidade']
+                    uf = endereco['uf']
 
-                elif mudanca == '3':
-                    dt_nasc = input('Data de nascimento: ')
-                    data_formatada = formatarData(dt_nasc)
-                    dados_cliente[cpf]["data_nascimento"] = data_formatada
+                    print(f'Logradouro: {logradouro}')
+                    print(f'Bairro: {bairro}')
+                    print(f'Localidade: {localidade}')
+                    print(f'uf: {uf}')
+                    correto = validacao(3)
+                    if correto == "S":
+                        complemento = input("Complemento (opcional): ")
+                        numero = input("Número (opcional): ")
+                        print(cep)
+                        break
+                db.insertEndereco(cpf, logradouro, bairro, numero, complemento, localidade, uf, cep)
+                
+                break
+                    
 
-                elif mudanca == '4': 
-                    telefone_fixo = input('Telefone fixo: ')
-                    dados_cliente[cpf]["telefone_fixo"] = telefone_fixo
+                # clear_console()
+                # separador(30, 2)
+                # print(f'1- Nome: {dados_cliente["nome"]}\n2- CPF: {cpf}\n3- Data de nascimento: {dados_cliente["data_nascimento"]}\n4- Telefone fixo: {dados_cliente["telefone_fixo"]}\n5- Telefone celular: {dados_cliente["telefone_celular"]}\n6- Email: {dados_cliente["email"]}')
+                # mudanca = input('Se todas informações estiverem corretas digite 0\nSe não digite o número que deseja mudar: ').strip()
+                # while mudanca != '0':
+                #     mudanca = validacao(mudanca, 1, dados_cliente)
+                #     if mudanca == '1':
+                #         nome = input('Nome: ').strip().title()
+                #         dados_cliente[cpf]["nome"] = nome
 
-                elif mudanca == '5':
-                    celular = input('Celular: ')
-                    dados_cliente[cpf]["telefone_celular"] = celular
+                #     elif mudanca == '2':
+                #         cpf = input('CPF: ')
+                #         cpf_formatado = formatarCpf(cpf)
+                #         dados_cliente[cpf]["cpf"] = cpf_formatado
 
-                elif mudanca == '6':
-                    email = input('Email: ')
-                    dados_cliente[cpf]["email"] = email
+                #     elif mudanca == '3':
+                #         dt_nasc = input('Data de nascimento: ')
+                #         data_formatada = formatarData(dt_nasc)
+                #         dados_cliente[cpf]["data_nascimento"] = data_formatada
+
+                #     elif mudanca == '4': 
+                #         telefone_fixo = input('Telefone fixo: ')
+                #         dados_cliente[cpf]["telefone_fixo"] = telefone_fixo
+
+                #     elif mudanca == '5':
+                #         celular = input('Celular: ')
+                #         dados_cliente[cpf]["telefone_celular"] = celular
+
+                #     elif mudanca == '6':
+                #         email = input('Email: ')
+                #         dados_cliente[cpf]["email"] = email
+
+            case 3:
+                if login:
+                    pass
+                else:
+                    separador(30,3)
+                    print("É neccesário estar logado!")
+                    option = 1
+
 
 
 
