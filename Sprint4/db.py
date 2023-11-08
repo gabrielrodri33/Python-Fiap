@@ -23,7 +23,21 @@ def create():
                                 tel_fixo    VARCHAR2(15),
                                 tel_celular VARCHAR2(15),
                                 email       VARCHAR2(100) NOT NULL,
+                                senha       VARCHAR2(1000) NOT NULL,
                                 CONSTRAINT cliente_pk PRIMARY KEY (cpf)
+                            )"""
+        
+        sql_query_endereco = """
+                            CREATE TABLE endereco (
+                                cliente_cpf   VARCHAR2(15) PRIMARY KEY,
+                                logradouro    VARCHAR2(255) NOT NULL,
+                                bairro        VARCHAR2(255) NOT NULL,
+                                numero        VARCHAR2(10),
+                                complemento   VARCHAR2(100),
+                                cidade        VARCHAR2(100) NOT NULL,
+                                estado        VARCHAR2(2) NOT NULL,
+                                cep           VARCHAR2(8) NOT NULL,
+                                CONSTRAINT endereco_cliente_fk FOREIGN KEY (cliente_cpf) REFERENCES cliente (cpf)
                             )"""
 
         sql_query_bike_modelos = """
@@ -58,31 +72,11 @@ def create():
                                 CONSTRAINT vistoria_cliente_fk FOREIGN KEY (cliente_cpf) REFERENCES cliente (cpf)
                             )"""
 
-        sql_query_imagens = """
-                            CREATE TABLE imagens (
-                                id_img               INTEGER NOT NULL,
-                                img                  VARCHAR2(255) NOT NULL,
-                                vistoria_id_vistoria INTEGER NOT NULL,
-                                CONSTRAINT imagens_pk PRIMARY KEY (id_img),
-                                CONSTRAINT imagens_vistoria_fk FOREIGN KEY (vistoria_id_vistoria) REFERENCES vistoria (id_vistoria)
-                            )"""
-
-        sql_query_videos = """
-                            CREATE TABLE videos (
-                                id_videos            INTEGER NOT NULL,
-                                video                VARCHAR2(255) NOT NULL,
-                                vistoria_id_vistoria INTEGER NOT NULL,
-                                CONSTRAINT videos_pk PRIMARY KEY (id_videos),
-                                CONSTRAINT videos_vistoria_fk FOREIGN KEY (vistoria_id_vistoria) REFERENCES vistoria (id_vistoria)
-                            )"""
-
         cursor.execute(sql_query_cliente)
+        cursor.execute(sql_query_endereco)
         cursor.execute(sql_query_bike_modelos)
         cursor.execute(sql_query_bikes)
         cursor.execute(sql_query_vistoria)
-        cursor.execute(sql_query_imagens)
-        cursor.execute(sql_query_videos)
-
         conn.commit()
         print("Tabelas criadas com sucesso!")
     except Exception as e:
@@ -90,20 +84,43 @@ def create():
     finally:
         conn.close()
 
-def insert(cpf, nome, dt_nasc, tel_fixo, tel_celular, email):
+def insert(cpf, nome, dt_nasc, tel_fixo, tel_celular, email, senha):
     try:
         conn, cursor = conexao()
 
         dt_nasc_formatada = datetime.strptime(dt_nasc, '%d/%m/%Y').strftime('%Y-%m-%d')
 
-        sql_query = "INSERT INTO cliente (cpf, nome, dt_nasc, tel_fixo, tel_celular, email) VALUES (:cpf, :nome, TO_DATE(:dt_nasc, 'YYYY-MM-DD'), :tel_fixo, :tel_celular, :email)"
+        sql_query = "INSERT INTO cliente (cpf, nome, dt_nasc, tel_fixo, tel_celular, email, senha) VALUES (:cpf, :nome, TO_DATE(:dt_nasc, 'YYYY-MM-DD'), :tel_fixo, :tel_celular, :email, :senha)"
         cursor.execute(sql_query, {
             'cpf': cpf,
             'nome': nome,
             'dt_nasc': dt_nasc_formatada,
             'tel_fixo': tel_fixo,
             'tel_celular': tel_celular,
-            'email': email
+            'email': email,
+            'senha': senha
+        })
+        conn.commit()
+        print("Cadastro realizado com sucesso!")
+    except Exception as e:
+        print(f"Something went wrong - insert {e}")
+    finally:
+        conn.close()
+
+def insertEndereco(cpf, logradouro, bairro, numero, complemento, cidade, estado, cep):
+    try:
+        conn, cursor = conexao()
+
+        sql_query = "INSERT INTO endereco (cliente_cpf, logradouro, bairro, numero, complemento, cidade, estado, cep) VALUES (:cliente_cpf, :logradouro, :bairro, :numero, :complemento, :cidade, :estado, :cep)"
+        cursor.execute(sql_query, {
+            'cliente_cpf': cpf,
+            'logradouro': logradouro,
+            'bairro': bairro,
+            'numero': numero,
+            'complemento': complemento,
+            'cidade': cidade,
+            'estado': estado,
+            'cep': cep
         })
         conn.commit()
         print("Cadastro realizado com sucesso!")
@@ -129,6 +146,67 @@ def update(table, dado, value, cpf):
         print(f'Something went wrong - update: {e}')
     finally:
         conn.close()
+
+def select(dado1, tbl, dado2):
+    try:
+        conn, cursor = conexao()
+
+        sql_query = f"SELECT {dado1} FROM {tbl} WHERE {dado2} = :dado2"
+        cursor.execute(sql_query, dado2=dado2)
+
+        resultados = cursor.fetchall()
+
+        for resultado in resultados:
+            print(f"{dado1}: {resultado[0]}")
+
+    except Exception as e:
+        print(f'Something went wrong - select: {e}')
+    finally:
+        conn.close()
+
+def verifica_cpf_existente(cpf):
+    try:
+        conn, cursor = conexao()
+
+        sql_query = "SELECT COUNT(*) FROM cliente WHERE cpf = :cpf"
+        cursor.execute(sql_query, cpf=cpf)
+
+        resultado = cursor.fetchone()
+        count = resultado[0]
+
+        if count > 0:
+            print(f"CPF {cpf} já cadastrado.")
+            return True
+        else:
+            print(f"CPF {cpf} não cadastrado.")
+            return False
+
+    except Exception as e:
+        print(f'Something went wrong - verifica_cpf_existente: {e}')
+    finally:
+        conn.close()
+
+def verifica_email_existente(email):
+    try:
+        conn, cursor = conexao()
+
+        sql_query = "SELECT COUNT(*) FROM cliente WHERE email = :email"
+        cursor.execute(sql_query, email=email)
+
+        resultado = cursor.fetchone()
+        count = resultado[0]
+
+        if count > 0:
+            print(f'E-mail: "{email}" já cadastrado.')
+            return True
+        else:
+            return False
+
+    except Exception as e:
+        print(f'Something went wrong - verifica_email_existente: {e}')
+    finally:
+        conn.close()
+
 
 def delete(cpf):
     try:
