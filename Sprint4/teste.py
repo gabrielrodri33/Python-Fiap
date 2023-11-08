@@ -1,10 +1,21 @@
-import bcrypt
-import getpass
+import webbrowser
+from api import viacep
 
-password = getpass.getpass("Senha: ").encode("utf-8")
-hashed = bcrypt.hashpw(password, bcrypt.gensalt())
+def consultaCep():
+    cep = input("Informe seu CEP!\nCaso não saiba apenas tecle ENTER!\nCEP: ").replace(" ", "").replace(".", "").replace("-", "")
 
-if bcrypt.checkpw(password, hashed):
-    print("It Matches!")
-else:
-    print("It Does not Match :(")
+    while len(cep) != 8 or not cep.isdigit():
+        print("Inválido!")
+        cep = input("Informe seu CEP!\nCaso não saiba apenas tecle ENTER!\nCEP: ").replace(" ", "").replace(".", "").replace("-", "")
+    
+    if cep == "":
+        link = "https://buscacepinter.correios.com.br/app/endereco/index.php"
+        webbrowser.open(link)
+        cep = input("CEP: ")
+    
+    cep, dic = viacep.cep(cep)
+    print(cep)
+    print(dic)
+    return cep, dic
+
+consultaCep()
