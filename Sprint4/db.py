@@ -134,12 +134,45 @@ def update(table, dado, value, cpf):
         conn, cursor = conexao()
 
         if isinstance(value, (int, float)):
-            value_str = value
+            value_str = str(value)
         else:
-            value_str = f"'{value}'"
+            value_str = f"'{value.replace("'", "''")}'"
 
-        sql_query = f"UPDATE {table} SET {dado} = {value_str} WHERE fis_jur_cliente = {cpf}"
-        cursor.execute(sql_query)
+        sql_query = f"UPDATE {table} SET {dado} = {value_str} WHERE cpf = :cpf"
+        cursor.execute(sql_query, {'cpf': cpf})
+        conn.commit()
+        print("Atualizado com sucesso")
+    except Exception as e:
+        print(f'Something went wrong - update: {e}')
+    finally:
+        conn.close()
+
+def updatePwd(table, dado, value_bytes, email):
+    try:
+        conn, cursor = conexao()
+
+        value_hex = value_bytes.hex()
+        value_str = f"HEXTORAW('{value_hex}')"
+
+        sql_query = f"UPDATE {table} SET {dado} = {value_str} WHERE email = :email"
+        cursor.execute(sql_query, {'email': email})
+        conn.commit()
+        print("Atualizado com sucesso")
+    except Exception as e:
+        print(f'Something went wrong - updatePwd: {e}')
+    finally:
+        cursor.close()
+        conn.close()
+
+def updateDate(table, dado, value, cpf):
+    try:
+        conn, cursor = conexao()
+
+        formatted_date = datetime.strptime(value, '%d/%m/%Y').strftime('%Y/%m/%d')
+
+
+        sql_query = f"UPDATE {table} SET {dado} = TO_DATE(:date_value, 'YYYY/MM/DD') WHERE cpf = :cpf"
+        cursor.execute(sql_query, {'date_value': formatted_date, 'cpf': cpf})
         conn.commit()
         print("Atualizado com sucesso")
     except Exception as e:
