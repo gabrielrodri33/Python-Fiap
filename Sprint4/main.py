@@ -155,13 +155,13 @@ def formatarTelefone():
 
 def salvarCredenciais(email, senha):
     try:
-        dados_login = carregarLista("clientes.json")
+        dados_login = carregarLista("Sprint4/json/clientes.json")
     except FileNotFoundError:
         dados_login = {}
 
     dados_login[email] = senha
 
-    with open("clientes.json", "w") as arquivo:
+    with open("Sprint4/json/clientes.json", "w") as arquivo:
         json.dump(dados_login, arquivo)
 
 def carregarLista(nome):
@@ -196,14 +196,25 @@ def formatarCpf():
 
     return f'{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}'
 
+def verifica_pwd(password):
+    while len(password) < 8 or len(password) > 20 or not any(char.isdigit() for char in password) or not any(char.islower() for char in password) or not any(char.isupper() for char in password):
+        separador("Erro!", 7)
+        print("Senha deve conter:\n•Entre 8 e 20 caracteres.\n•Pelo menos um número.\n•Uma letra maiúscula e minúscula.")
+        password = getpass.getpass("Digite uma senha entre 8 e 20 caracteres, que contenha pelo menos um número: ")
+    return password
+
 def pwd():
-    password = getpass.getpass("Senha: ").encode("utf-8")
+    password = getpass.getpass("Senha: ").encode("utf-8")        
+    password = verifica_pwd(password)
     confirm_password = getpass.getpass("Confirmar senha: ").encode("utf-8")
+    confirm_password = verifica_pwd(confirm_password)
 
     while password != confirm_password:
         separador("Senhas diferentes!", 7)
         password = getpass.getpass("Senha: ").encode("utf-8")
+        password = verifica_pwd(password)
         confirm_password = getpass.getpass("Confirmar senha: ").encode("utf-8") 
+        confirm_password = verifica_pwd(confirm_password)
 
     code = base64.b64encode(password).decode('utf-8')
 
@@ -288,6 +299,7 @@ def cadastroCliente():
     tel_celular = formatarCell()
     db.insert(cpf, nome, dt_nasc, tel_fixo, tel_celular, email, senha)
     dados_cliente = addDict(dados_cliente, nome, email, dt_nasc, tel_fixo, tel_celular, cpf)
+    atualizacao_txt("Cliente cadastrado", cpf)
 
     clear_console()
 
@@ -313,6 +325,7 @@ def cadastroEndereco(cpf):
             complemento = input("Complemento (opcional): ")
             numero = input("Número (opcional): ")
             break
+        atualizacao_txt("Endereço cadastrado", cpf)
 
     db.insertEndereco(cpf, logradouro, bairro, numero, complemento, localidade, uf, cep)
     
@@ -329,87 +342,105 @@ def updateCliente(dados_cliente, cpf):
             case 1:
                 dados_cliente["nome"] = input('Nome: ').strip().title()
                 db.update("cliente", "nome", dados_cliente["nome"], cpf)
+                atualizacao_txt("Nome atualizado", dados_cliente["nome"])
             case 2:
                 dados_cliente["cpf"] = formatarCpf()
                 db.update("cliente", "cpf", dados_cliente["cpf"], dados_cliente["cpf"])
-
+                atualizacao_txt("CPF atualizado", dados_cliente["cpf"])
             case 3:
                 dados_cliente["data_nascimento"] = formatarData()
                 db.updateDate("cliente", "dt_nasc", dados_cliente["data_nascimento"], dados_cliente["cpf"])
+                atualizacao_txt("Data de nascimento atualizada", dados_cliente["data_nascimento"])
 
             case 4:
                 dados_cliente["telefone_fixo"] = formatarTelefone()
                 db.update("cliente", "tel_fixo", dados_cliente["telefone_fixo"], dados_cliente["cpf"])
+                atualizacao_txt("Telefone fixo atualizado", dados_cliente["telefone_fixo"])
 
             case 5:
                 dados_cliente["telefone_celular"] = formatarCell()
                 db.update("cliente", "tel_celular", dados_cliente["telefone_celular"], dados_cliente["cpf"])
+                atualizacao_txt("Telefone celular atualizado", dados_cliente["telefone_celular"])
             
             case 6:
                 dados_cliente["email"] = validaEmail()
                 db.update("cliente", "email", dados_cliente["email"], dados_cliente["cpf"])
+                atualizacao_txt("Email atualizado", dados_cliente["email"])
         break
+
+def atualizacao_txt(info, info2):
+    date = datetime.datetime.now()
+    texto = f'-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n{info}: {info2}\nDia e hora: {date}\n-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n'
+    with open('Sprint4/archive/eventos.txt', 'a') as file:
+        file.write(texto)
+
+def login_user():
+    status = False
+    c = 0
+    dados_login = carregarLista("Sprint4/json/clientes.json")
+    while status == False:
+        separador(30, 3)
+        centralizar("Login", 60)
+        separador(30, 3)
+        email = logarEmail()
+        senha = getpass.getpass("Senha: ").encode("utf-8")
+        senha = base64.b64encode(senha).decode("utf-8")
+        
+        if email in dados_login and dados_login[email] == senha:
+            status = True
+            login = True
+        else:
+            clear_console()
+            separador(30, 3)
+            separador("Email ou senha incorretos!", 7)
+            c += 1
+    
+        if c == 3:
+            clear_console()
+            separador(30, 5)
+            centralizar("Limite de tentativas atingido!", 60)
+            separador(30, 5)
+            option = validacao(3)
+            if option == 1:
+                option = 2
+
+            else:
+                email = logarEmail()
+                senha, code = pwd()
+                db.updatePwd("cliente", "senha", senha, email)
+                
+                with open("Sprint4/json/clientes.json", 'r') as arquivo:
+                    dados_login = json.load(arquivo)
+
+                dados_login[email] = code
+
+                with open("Sprint4/json/clientes.json", 'w') as arquivo:
+                    json.dump(dados_login, arquivo, indent=2)
+
+                print(f'Valor da chave {email} alterado para {code}.')
+
+                c = 0
+
+    if status == True:
+        clear_console()
+        separador(30,1)
+        centralizar("Logado!", 60)
+        atualizacao_txt("Usuário logado", email)
+        option = validacao(1)
+    email = ""
+    senha = ""
+    return  option, login
 
 def menuPrincipal():
     option = validacao(1)
     clear_console()
-    status = False
+    # status = False
     login = False
     while True:
         match option:
             case 1:
-                c = 0
-                dados_login = carregarLista("clientes.json")
-                while status == False:
-                    separador(30, 3)
-                    email = logarEmail()
-                    senha = getpass.getpass("Senha: ").encode("utf-8")
-                    senha = base64.b64encode(senha).decode("utf-8")
+                option, login = login_user()
                     
-                    if email in dados_login and dados_login[email] == senha:
-                        status = True
-                        login = True
-                    else:
-                        clear_console()
-                        separador(30, 3)
-                        separador("Email ou senha incorretos!", 7)
-                        c += 1
-                
-                    if c == 3:
-                        clear_console()
-                        separador(30, 5)
-                        centralizar("Limite de tentativas atingido!", 60)
-                        separador(30, 5)
-                        option = validacao(3)
-                        if option == 1:
-                            option = 2
-
-                        else:
-                            email = logarEmail()
-                            senha, code = pwd()
-                            db.updatePwd("cliente", "senha", senha, email)
-                            
-                            with open("clientes.json", 'r') as arquivo:
-                                dados_login = json.load(arquivo)
-
-                            dados_login[email] = code
-
-                            with open("clientes.json", 'w') as arquivo:
-                                json.dump(dados_login, arquivo, indent=2)
-
-                            print(f'Valor da chave {email} alterado para {code}.')
-
-                            c = 0
-
-                email = ""
-                senha = ""
-                if status == True:
-                    clear_console()
-                    separador(30,1)
-                    centralizar("Logado!", 60)
-                    option = validacao(1)
-                    
-
             case 2:
                 if login == True:
                     pass
