@@ -1,10 +1,12 @@
 import oracledb
-import credenciais
 from datetime import datetime
+
+def credenciais():
+    return "RM98626", "311003"
 
 def conexao():
     try:
-        user, pwd = credenciais.credenciais()
+        user, pwd = credenciais()
         conn = oracledb.connect(user=user, password=pwd, host="oracle.fiap.com.br", port="1521", service_name="orcl")
         cursor = conn.cursor()
         # print(f"Conexão {conn.version}")
