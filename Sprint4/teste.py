@@ -1,16 +1,10 @@
-import bcrypt
-import base64
-import getpass
+import datetime
 
-def pwd():
-    password = getpass.getpass("Senha: ").encode("utf-8")
+def cadastrar_usuario(info, info2):
+    date = datetime.datetime.now()
+    texto = f'-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n{info}: {info2}\nDia e hora: {date}\n-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n'
+    with open('Sprint4/archive/eventos.txt', 'a') as file:
+        file.write(texto)
 
-    code = base64.b64encode(password).decode('utf-8')
 
-    hashed = bcrypt.hashpw(password, bcrypt.gensalt())
-
-    print(f'senha: {hashed}')
-    print(f'code: {code}')
-    return hashed, code
-
-pwd()
+cadastrar_usuario('Usuário cadastrado', 'email')
