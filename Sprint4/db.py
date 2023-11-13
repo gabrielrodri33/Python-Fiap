@@ -41,15 +41,15 @@ def create():
                                 cep           VARCHAR2(8) NOT NULL,
                                 CONSTRAINT endereco_cliente_fk FOREIGN KEY (cliente_cpf) REFERENCES cliente (cpf)
                             )"""
-
+        
         sql_query_bike_modelos = """
                             CREATE TABLE bike_modelos (
                                 id_modelo   INTEGER NOT NULL,
                                 nome        VARCHAR2(255) NOT NULL,
-                                valor_aprox NUMBER(18, 2),
+                                valor_aprox VARCHAR2(35),
                                 CONSTRAINT bike_modelos_pk PRIMARY KEY (id_modelo)
                             )"""
-
+        
         sql_query_bikes = """
                             CREATE TABLE bikes (
                                 num_serie              VARCHAR2(255) NOT NULL,
@@ -84,6 +84,7 @@ def create():
     except Exception as e:
         print(f'Something went wrong - create: {e}')
     finally:
+        cursor.close()
         conn.close()
 
 def insert(cpf, nome, dt_nasc, tel_fixo, tel_celular, email, senha):
@@ -107,7 +108,55 @@ def insert(cpf, nome, dt_nasc, tel_fixo, tel_celular, email, senha):
     except Exception as e:
         print(f"Something went wrong - insert {e}")
     finally:
+        cursor.close()
         conn.close()
+
+def select_id():
+    try:
+        conn, cursor = conexao()
+
+        sql_query = "SELECT MAX(id_modelo) FROM bike_modelos"
+        cursor.execute(sql_query)
+        id = cursor.fetchone()[0]
+        return id
+    except Exception as e:
+        print(f"Algo deu errado - select_id: {e}")
+    finally:
+        cursor.close()
+        conn.close()
+
+def validate_valor_aprox(valor_aprox):
+    try:
+        valor_aprox = float(valor_aprox)
+        return True
+    except ValueError:
+        return False
+
+def insert_bike_modelo(nome, valor_aprox):
+    try:
+        conn, cursor = conexao()
+
+        id_modelo = select_id()
+
+        if id_modelo is None:
+            id_modelo = 1
+        else:
+            id_modelo += 1
+
+        # if validate_valor_aprox(valor_aprox):
+        sql_query = "INSERT INTO bike_modelos (id_modelo, nome, valor_aprox) VALUES (:id_modelo, :nome, :valor_aprox)"
+        cursor.execute(sql_query, {
+            'id_modelo': id_modelo,
+            'nome': nome,
+            'valor_aprox': valor_aprox
+        })
+        conn.commit()
+        print("Cadastro de modelo de bicicleta realizado com sucesso!")
+        # else:
+        #     print("O valor aproximado não é um número válido.")
+    except Exception as e:
+        print(f"Algo deu errado - insert_bike_modelo: {e}")
+
 
 def insertEndereco(cpf, logradouro, bairro, numero, complemento, cidade, estado, cep):
     try:
@@ -129,6 +178,7 @@ def insertEndereco(cpf, logradouro, bairro, numero, complemento, cidade, estado,
     except Exception as e:
         print(f"Something went wrong - insert {e}")
     finally:
+        cursor.close()
         conn.close()
 
 def update(table, dado, value, cpf):
@@ -147,6 +197,7 @@ def update(table, dado, value, cpf):
     except Exception as e:
         print(f'Something went wrong - update: {e}')
     finally:
+        cursor.close()
         conn.close()
 
 def updatePwd(table, dado, value_bytes, email):
@@ -180,6 +231,7 @@ def updateDate(table, dado, value, cpf):
     except Exception as e:
         print(f'Something went wrong - update: {e}')
     finally:
+        cursor.close()
         conn.close()
 
 def select(dado1, tbl, dado2):
@@ -197,6 +249,7 @@ def select(dado1, tbl, dado2):
     except Exception as e:
         print(f'Something went wrong - select: {e}')
     finally:
+        cursor.close()
         conn.close()
 
 def verifica_cpf_existente(cpf):
@@ -213,12 +266,12 @@ def verifica_cpf_existente(cpf):
             print(f"CPF {cpf} já cadastrado.")
             return True
         else:
-            print(f"CPF {cpf} não cadastrado.")
             return False
 
     except Exception as e:
         print(f'Something went wrong - verifica_cpf_existente: {e}')
     finally:
+        cursor.close()
         conn.close()
 
 def verifica_email_existente(email):
@@ -240,19 +293,24 @@ def verifica_email_existente(email):
     except Exception as e:
         print(f'Something went wrong - verifica_email_existente: {e}')
     finally:
+        cursor.close()
         conn.close()
 
 
-def delete(cpf):
+def delete_endereco(cpf):
     try:
         conn, cursor = conexao()
-        sql_query = (f"DELETE FROM cliente WHERE fis_jur_cliente = {cpf}")
-        cursor.execute(sql_query)
+        sql_query = (f"DELETE FROM endereco WHERE cliente_cpf = :cpf")
+        cursor.execute(sql_query, {
+            # 'tbl': tbl,
+            'cpf': cpf
+        })
         conn.commit()
         print("Usuário deletado com sucesso!")
     except Exception as e:
         print(f"Something went wrong - delete: {e}")
     finally:
+        cursor.close()
         conn.close()
 
 #Programa principal
