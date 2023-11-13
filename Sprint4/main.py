@@ -10,6 +10,7 @@ import re
 import webbrowser
 from api import viacep
 from api import cellerecpf
+import time
 
 def clear_console():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -98,6 +99,65 @@ def validacao(dado):
                 separador("Entrada inválida!", 7)
                 print("Por favor insira um número")
 
+    elif dado == 5:
+        status = False
+    if dado == 1:
+        while not status:
+            try:
+                separador(30, 1)
+                centralizar("Menu principal!", 60)
+                separador(30, 1)
+                option = int(input('Verifique as informações!\nSe correto digite 0, caso contrário 1: '))
+
+                if option == 1 or option == 0:
+                    status = True
+
+                else:
+                    clear_console()
+                    separador(30, 1)
+                    separador("Entrada inválida!", 7)
+                    print("Por favor escolha 0 ou 1!")
+
+            except ValueError:
+                clear_console()
+                separador(30, 1)
+                separador("Entrada inválida!", 7)
+                print("Por favor insira um número")
+
+    elif dado == 6:
+        while not status:
+            try:
+                separador(30, 1)
+                centralizar("Menu principal!", 60)
+                separador(30, 1)
+                option = int(input('1- Fazer seguro de bike!\n2- Saber informações do seguro\n3- Termos de segurança e privacidade\n4- Suporte\n5- Sair\n'))
+
+                if 1 <= option <= 5:
+                    status = True
+
+                else:
+                    clear_console()
+                    separador(30, 1)
+                    separador("Entrada inválida!", 7)
+                    print("Por favor escolha uma opção de 1 a 6!")
+                
+                if option == 1:
+                    option = 3
+                elif option == 2:
+                    option = 4
+                elif option == 3:
+                    option = 5
+                elif option == 4:
+                    option = 6
+                elif option == 5:
+                    option = 7
+                    
+            except ValueError:
+                clear_console()
+                separador(30, 1)
+                separador("Entrada inválida!", 7)
+                print("Por favor insira um número")
+
     elif dado == 4:
         while not status:
             try:
@@ -180,41 +240,77 @@ def addDict(dicionario, nome, email, dt_nasc, tel_fixo, tel_celular, cpf):
 
     return dicionario
 
+def add_dict_endereco(dicionario, logradouro, bairro, localidade, uf, complemento, numero):
+    dicionario = {
+        'logradouro': logradouro,
+        'bairro': bairro,
+        'localidade': localidade,
+        'uf': uf,
+        'complemento': complemento,
+        'numero': numero
+    }
+
+    print(dicionario)
+    return dicionario
+
 def formatarCpf():
+
     while True:
         cpf = input("CPF: ")
         while len(cpf) != 11:
             separador('CPF inválido!', 6)
             cpf = input(f'Deve conter 11 caracteres\nDigite seu CPF: ').replace('.', '').replace('-', '').replace(' ', '')
 
-        if len(cpf) == 11:
+        cpf = f'{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}'
+        
+        if db.verifica_cpf_existente(cpf):
+            verifica = False
+        else:
+            verifica = True
+        
+        if verifica == True:
             break
 
         # consulta = cellerecpf.consultaCpf(cpf)
         # if consulta:
         #     break
 
-    return f'{cpf[:3]}.{cpf[3:6]}.{cpf[6:9]}-{cpf[9:]}'
+    return cpf
 
-def verifica_pwd(password):
-    while len(password) < 8 or len(password) > 20 or not any(char.isdigit() for char in password) or not any(char.islower() for char in password) or not any(char.isupper() for char in password):
-        separador("Erro!", 7)
-        print("Senha deve conter:\n•Entre 8 e 20 caracteres.\n•Pelo menos um número.\n•Uma letra maiúscula e minúscula.")
-        password = getpass.getpass("Digite uma senha entre 8 e 20 caracteres, que contenha pelo menos um número: ")
-    return password
+# def verifica_pwd(password):
+#     while len(password) < 8 or len(password) > 20 or not any(char.isdigit() for char in password) or not any(char.islower() for char in password) or not any(char.isupper() for char in password):
+#         separador("Erro!", 7)
+#         print("Senha deve conter:\n•Entre 8 e 20 caracteres.\n•Pelo menos um número.\n•Uma letra maiúscula e minúscula.")
+#         password = getpass.getpass("Digite uma senha entre 8 e 20 caracteres, que contenha pelo menos um número: ")
+#     return password
+
+# def pwd():
+#     password = getpass.getpass("Senha: ").encode("utf-8")        
+#     password = verifica_pwd(password)
+#     confirm_password = getpass.getpass("Confirmar senha: ").encode("utf-8")
+#     confirm_password = verifica_pwd(confirm_password)
+
+#     while password != confirm_password:
+#         separador("Senhas diferentes!", 7)
+#         password = getpass.getpass("Senha: ").encode("utf-8")
+#         password = verifica_pwd(password)
+#         confirm_password = getpass.getpass("Confirmar senha: ").encode("utf-8") 
+#         confirm_password = verifica_pwd(confirm_password)
+
+#     code = base64.b64encode(password).decode('utf-8')
+
+#     hashed = bcrypt.hashpw(password, bcrypt.gensalt())
+
+#     return hashed, code
 
 def pwd():
-    password = getpass.getpass("Senha: ").encode("utf-8")        
-    password = verifica_pwd(password)
+    password = getpass.getpass("Senha: ").encode("utf-8")
     confirm_password = getpass.getpass("Confirmar senha: ").encode("utf-8")
-    confirm_password = verifica_pwd(confirm_password)
 
     while password != confirm_password:
         separador("Senhas diferentes!", 7)
         password = getpass.getpass("Senha: ").encode("utf-8")
-        password = verifica_pwd(password)
         confirm_password = getpass.getpass("Confirmar senha: ").encode("utf-8") 
-        confirm_password = verifica_pwd(confirm_password)
 
     code = base64.b64encode(password).decode('utf-8')
 
@@ -303,9 +399,13 @@ def cadastroCliente():
 
     clear_console()
 
-    return dados_cliente, cpf
+    update_cliente(dados_cliente, cpf)
+
+    return cpf
+    
 
 def cadastroEndereco(cpf):
+    endereco_cliente = {}
     while True:
         separador(30,3)
         centralizar("Endereço", 60)
@@ -324,19 +424,23 @@ def cadastroEndereco(cpf):
         if correto == "S":
             complemento = input("Complemento (opcional): ")
             numero = input("Número (opcional): ")
+            endereco_cliente = add_dict_endereco(endereco_cliente, logradouro, bairro, localidade, uf, complemento, numero)
             break
         atualizacao_txt("Endereço cadastrado", cpf)
 
+
     db.insertEndereco(cpf, logradouro, bairro, numero, complemento, localidade, uf, cep)
+
+    return endereco_cliente
     
-def updateCliente(dados_cliente, cpf):
+def update_cliente(dados_cliente, cpf):
     mudanca = ""
     while mudanca != 0:
-        clear_console()
+        # clear_console()
         separador(30, 2)
         centralizar("Informações de Cadastro", 60)
         separador(30, 2)
-        print(f'1- Nome: {dados_cliente["nome"]}\n2- CPF: {cpf}\n3- Data de nascimento: {dados_cliente["data_nascimento"]}\n4- Telefone fixo: {dados_cliente["telefone_fixo"]}\n5- Telefone celular: {dados_cliente["telefone_celular"]}\n6- Email: {dados_cliente["email"]}')
+        print(f'1- Nome: {dados_cliente["nome"]}\n2- Data de nascimento: {dados_cliente["data_nascimento"]}\n3- Telefone fixo: {dados_cliente["telefone_fixo"]}\n4- Telefone celular: {dados_cliente["telefone_celular"]}\n5- Email: {dados_cliente["email"]}')
         mudanca = validacao(2)
         match mudanca:
             case 1:
@@ -344,30 +448,58 @@ def updateCliente(dados_cliente, cpf):
                 db.update("cliente", "nome", dados_cliente["nome"], cpf)
                 atualizacao_txt("Nome atualizado", dados_cliente["nome"])
             case 2:
-                dados_cliente["cpf"] = formatarCpf()
-                db.update("cliente", "cpf", dados_cliente["cpf"], dados_cliente["cpf"])
-                atualizacao_txt("CPF atualizado", dados_cliente["cpf"])
-            case 3:
                 dados_cliente["data_nascimento"] = formatarData()
-                db.updateDate("cliente", "dt_nasc", dados_cliente["data_nascimento"], dados_cliente["cpf"])
+                db.updateDate("cliente", "dt_nasc", dados_cliente["data_nascimento"], cpf)
                 atualizacao_txt("Data de nascimento atualizada", dados_cliente["data_nascimento"])
 
-            case 4:
+            case 3:
                 dados_cliente["telefone_fixo"] = formatarTelefone()
-                db.update("cliente", "tel_fixo", dados_cliente["telefone_fixo"], dados_cliente["cpf"])
+                db.update("cliente", "tel_fixo", dados_cliente["telefone_fixo"], cpf)
                 atualizacao_txt("Telefone fixo atualizado", dados_cliente["telefone_fixo"])
 
-            case 5:
+            case 4:
                 dados_cliente["telefone_celular"] = formatarCell()
-                db.update("cliente", "tel_celular", dados_cliente["telefone_celular"], dados_cliente["cpf"])
+                db.update("cliente", "tel_celular", dados_cliente["telefone_celular"], cpf)
                 atualizacao_txt("Telefone celular atualizado", dados_cliente["telefone_celular"])
             
-            case 6:
+            case 5:
                 dados_cliente["email"] = validaEmail()
-                db.update("cliente", "email", dados_cliente["email"], dados_cliente["cpf"])
+                db.update("cliente", "email", dados_cliente["email"], cpf)
                 atualizacao_txt("Email atualizado", dados_cliente["email"])
-        break
 
+def update_endereco(endereco_cliente, cpf):
+    mudanca = ""
+    while mudanca != 0:
+        clear_console()
+        separador(30, 2)
+        centralizar("Informações de Endereço", 60)
+        separador(30, 2)
+        print(f'Logradouro: {endereco_cliente["logradouro"]}\nBairro: {endereco_cliente["bairro"]}\nLocalidade: {endereco_cliente["localidade"]}\nUF: {endereco_cliente["uf"]}\nComplemento: {endereco_cliente["complemento"]}\nNúmero: {endereco_cliente["numero"]}')
+        mudanca = validacao(5)
+        match mudanca:
+            case 1:
+                separador(30,3)
+                centralizar("Endereço", 60)
+                separador(30,3)
+                cep, endereco = consultaCep()
+                logradouro = endereco['logradouro']
+                bairro = endereco['bairro']
+                localidade = endereco['localidade']
+                uf = endereco['uf']
+
+                print(f'Logradouro: {logradouro}')
+                print(f'Bairro: {bairro}')
+                print(f'Localidade: {localidade}')
+                print(f'uf: {uf}')
+                correto = validacao(4)
+                if correto == "S":
+                    complemento = input("Complemento (opcional): ")
+                    numero = input("Número (opcional): ")
+                    db.delete_endereco(cpf)
+                    db.insertEndereco(cpf, logradouro, bairro, numero, complemento, localidade, uf, cep)
+                    break
+                atualizacao_txt("Endereço atualizado", cpf)
+                
 def atualizacao_txt(info, info2):
     date = datetime.datetime.now()
     texto = f'-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n{info}: {info2}\nDia e hora: {date}\n-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=\n'
@@ -426,10 +558,66 @@ def login_user():
         separador(30,1)
         centralizar("Logado!", 60)
         atualizacao_txt("Usuário logado", email)
-        option = validacao(1)
+        option = validacao(6)
     email = ""
     senha = ""
     return  option, login
+
+def formata_valor():
+    status = False
+    while not status:
+        try:
+            valor = int(input("Valor: R$"))
+
+            break
+        except:
+            print("Insira um número!")
+
+
+    if isinstance(valor, (int, float)):
+        valor = round(valor, 2)
+        valor_str = '{:,}'.format(int(valor))
+        if valor == int(valor):
+            valor_str += '.00'
+        else:
+            valor_str += '.' + '{:02d}'.format(int(valor % 1 * 100))
+        return 'R$' + valor_str
+    else:
+        raise ValueError('Invalid valor format')
+
+def cadastro_bike():
+    clear_console()
+    separador(30, 3)
+    centralizar('Cadastro de bike!', 60)
+    separador(30, 3)
+    nome = input("Modelo: ")
+    valor_aprox = formata_valor()
+    num_serie = input("Número de série: ")
+    cor = input("Cor: ")
+    obs = print("Observação: ")
+    db.insert_bike_modelo(nome, valor_aprox)
+    # sql_query_bike_modelos = """
+    #         CREATE TABLE bike_modelos (
+    #             id_modelo   INTEGER NOT NULL,
+    #             nome        VARCHAR2(255) NOT NULL,
+    #             valor_aprox NUMBER(18, 2),
+    #             CONSTRAINT bike_modelos_pk PRIMARY KEY (id_modelo)
+    #         )"""
+    # bikes
+    # CREATE TABLE bikes (
+    #     num_serie              VARCHAR2(255) NOT NULL,
+    #     valor                  NUMBER(18, 2) NOT NULL,
+    #     cor                    VARCHAR2(255) NOT NULL,
+    #     bike_modelos_id_modelo INTEGER NOT NULL,
+
+    # CREATE TABLE vistoria (
+    #     id_vistoria     INTEGER NOT NULL,
+    #     dt_inicio       DATE NOT NULL,
+    #     dt_fim          DATE,
+    #     aprov           CHAR(1) NOT NULL,
+    #     obs             CLOB,
+    #     bikes_num_serie VARCHAR2(255) NOT NULL,
+    #     cliente_cpf     VARCHAR2(15) NOT NULL,
 
 def menuPrincipal():
     option = validacao(1)
@@ -443,21 +631,27 @@ def menuPrincipal():
                     
             case 2:
                 if login == True:
-                    pass
+                    print("Você já está logado")
+                    option = validacao(6)
                 else:
-                    dados_cliente, cpf = cadastroCliente()
-                    cadastroEndereco(cpf)
-                    updateCliente(dados_cliente, cpf)
-                    option = validacao(5)
+                    cpf = cadastroCliente()
+                    endereco_cliente = cadastroEndereco(cpf)
+                    update_endereco(endereco_cliente, cpf)
+                    print("Redirecionando para seguro de bike!")
+                    time.sleep(3)
+                    option = 3
 
             case 3:
                 if login:
-                    pass
+                    cadastro_bike()
                 else:
                     separador(30,3)
                     print("É neccesário estar logado!")
                     option = 1
             
+            case 4:
+                pass
+
             case 5:
                 url = 'https://www.portoseguro.com.br/conteudo/mobile/portoseguro/politica-de-privacidade.html'
                 webbrowser.open(url)
@@ -475,7 +669,6 @@ def menuPrincipal():
                 break
             case 7:
                 break
-
 
 def atendente():
     while True:
@@ -506,7 +699,6 @@ def atendente():
             print('Atendente Virtual: Desculpe, não entendi a pergunta. Por favor, faça uma pergunta mais específica.')
 
         print("Atendente Virtual: Posso ajudar em mais alguma coisa?")
-
 
 def principal():
     clear_console()
