@@ -2,7 +2,7 @@ import oracledb
 from datetime import datetime
 
 def credenciais():
-    return "RM98626", "311003"
+    return "User", "Senha"
 
 def conexao():
     try:
@@ -47,17 +47,11 @@ def create():
                                 id_modelo   INTEGER NOT NULL,
                                 nome        VARCHAR2(255) NOT NULL,
                                 valor_aprox VARCHAR2(35),
+                                cor         VARCHAR2(255),
+                                num_serie   VARCHAR2(255) NOT NULL,
+                                obs             CLOB,
+                                cpf_cliente VARCHAR2(15) NOT NULL,
                                 CONSTRAINT bike_modelos_pk PRIMARY KEY (id_modelo)
-                            )"""
-        
-        sql_query_bikes = """
-                            CREATE TABLE bikes (
-                                num_serie              VARCHAR2(255) NOT NULL,
-                                valor                  NUMBER(18, 2) NOT NULL,
-                                cor                    VARCHAR2(255) NOT NULL,
-                                bike_modelos_id_modelo INTEGER NOT NULL,
-                                CONSTRAINT bikes_pk PRIMARY KEY (num_serie),
-                                CONSTRAINT bikes_bike_modelos_fk FOREIGN KEY (bike_modelos_id_modelo) REFERENCES bike_modelos (id_modelo)
                             )"""
 
         sql_query_vistoria = """
@@ -66,18 +60,15 @@ def create():
                                 dt_inicio       DATE NOT NULL,
                                 dt_fim          DATE,
                                 aprov           CHAR(1) NOT NULL,
-                                obs             CLOB,
                                 bikes_num_serie VARCHAR2(255) NOT NULL,
                                 cliente_cpf     VARCHAR2(15) NOT NULL,
                                 CONSTRAINT vistoria_pk PRIMARY KEY (id_vistoria),
-                                CONSTRAINT vistoria_bikes_fk FOREIGN KEY (bikes_num_serie) REFERENCES bikes (num_serie),
                                 CONSTRAINT vistoria_cliente_fk FOREIGN KEY (cliente_cpf) REFERENCES cliente (cpf)
                             )"""
 
         cursor.execute(sql_query_cliente)
         cursor.execute(sql_query_endereco)
         cursor.execute(sql_query_bike_modelos)
-        cursor.execute(sql_query_bikes)
         cursor.execute(sql_query_vistoria)
         conn.commit()
         print("Tabelas criadas com sucesso!")
@@ -111,14 +102,72 @@ def insert(cpf, nome, dt_nasc, tel_fixo, tel_celular, email, senha):
         cursor.close()
         conn.close()
 
+def select_id_vistoria():
+    try:
+        conn, cursor = conexao()
+
+        sql_query = "SELECT MAX(id_vistoria) FROM vistoria"
+        cursor.execute(sql_query)
+        max_id = cursor.fetchone()[0]
+
+        if max_id is not None:
+            return max_id + 1
+        else:
+            return 1
+        
+    except Exception as e:
+        print(f"Algo deu errado - select_id: {e}")
+    finally:
+        cursor.close()
+        conn.close()
+
+def insert_vistoria(aprov, bikes_num_serie, cliente_cpf):
+    try:
+        conn, cursor = conexao()
+
+        id_vistoria = select_id()
+
+        dt_inicio = datetime.now()
+        dt_fim = datetime.now()
+
+        sql_query = """
+                    INSERT INTO vistoria (id_vistoria, dt_inicio, dt_fim, aprov, bikes_num_serie, cliente_cpf)
+                    VALUES (:id_vistoria, :dt_inicio, :dt_fim, :aprov, :bikes_num_serie, :cliente_cpf)
+                    """
+
+        cursor.execute(sql_query, {
+            'id_vistoria': id_vistoria,
+            'dt_inicio': dt_inicio,
+            'dt_fim': dt_fim,
+            'aprov': aprov,
+            'bikes_num_serie': bikes_num_serie,
+            'cliente_cpf': cliente_cpf
+        })
+
+        conn.commit()
+
+        print("Cadastro de vistoria realizado com sucesso!")
+        return id_vistoria
+    except Exception as e:
+        print(f"Algo deu errado - insert_vistoria: {e}")
+        conn.rollback()
+    finally:
+        cursor.close()
+        conn.close()
+
 def select_id():
     try:
         conn, cursor = conexao()
 
         sql_query = "SELECT MAX(id_modelo) FROM bike_modelos"
         cursor.execute(sql_query)
-        id = cursor.fetchone()[0]
-        return id
+        max_id = cursor.fetchone()[0]
+
+        if max_id is not None:
+            return max_id + 1
+        else:
+            return 1
+
     except Exception as e:
         print(f"Algo deu errado - select_id: {e}")
     finally:
@@ -131,32 +180,63 @@ def validate_valor_aprox(valor_aprox):
         return True
     except ValueError:
         return False
-
-def insert_bike_modelo(nome, valor_aprox):
+    
+def insert_bike_modelo(nome, valor_aprox, cor, num_serie, obs, cpf_cliente):
     try:
         conn, cursor = conexao()
 
         id_modelo = select_id()
 
-        if id_modelo is None:
-            id_modelo = 1
-        else:
-            id_modelo += 1
-
-        # if validate_valor_aprox(valor_aprox):
-        sql_query = "INSERT INTO bike_modelos (id_modelo, nome, valor_aprox) VALUES (:id_modelo, :nome, :valor_aprox)"
+        sql_query = """
+                    INSERT INTO bike_modelos (id_modelo, nome, valor_aprox, cor, num_serie, obs, cpf_cliente)
+                    VALUES (:id_modelo, :nome, :valor_aprox, :cor, :num_serie, :obs, :cpf_cliente)
+                    """
+        
         cursor.execute(sql_query, {
             'id_modelo': id_modelo,
             'nome': nome,
-            'valor_aprox': valor_aprox
+            'valor_aprox': valor_aprox,
+            'cor': cor,
+            'num_serie': num_serie,
+            'obs': obs,
+            'cpf_cliente': cpf_cliente
         })
+
         conn.commit()
+
         print("Cadastro de modelo de bicicleta realizado com sucesso!")
-        # else:
-        #     print("O valor aproximado não é um número válido.")
+        return id_modelo
     except Exception as e:
         print(f"Algo deu errado - insert_bike_modelo: {e}")
+        conn.rollback()
+    finally:
+        cursor.close()
+        conn.close()
 
+def get_cpf_from_email(email):
+    try:
+        conn, cursor = conexao()
+
+        sql_query = "SELECT cpf FROM cliente WHERE email = :email"
+        cursor.execute(sql_query, {'email': email})
+
+        result = cursor.fetchone()
+
+        if result:
+            cpf = result[0]
+            print(f"O CPF associado ao email {email} é: {cpf}")
+            return cpf
+        else:
+            print(f"Nenhum registro encontrado para o email {email}")
+            return None
+
+    except Exception as e:
+        print(f"Algo deu errado - get_cpf_from_email: {e}")
+        return None
+
+    finally:
+        cursor.close()
+        conn.close()
 
 def insertEndereco(cpf, logradouro, bairro, numero, complemento, cidade, estado, cep):
     try:
@@ -199,6 +279,26 @@ def update(table, dado, value, cpf):
     finally:
         cursor.close()
         conn.close()
+
+def update_bike(table, dado, value, modelo_id):
+    try:
+        conn, cursor = conexao()
+
+        if isinstance(value, (int, float)):
+            value_str = str(value)
+        else:
+            value_str = f"'{value.replace("'", "''")}'"
+
+        sql_query = f"UPDATE {table} SET {dado} = {value_str} WHERE id_modelo = :modelo_id"
+        cursor.execute(sql_query, {'modelo_id': modelo_id})
+        conn.commit()
+        print("Atualizado com sucesso")
+    except Exception as e:
+        print(f'Something went wrong - update: {e}')
+    finally:
+        cursor.close()
+        conn.close()
+
 
 def updatePwd(table, dado, value_bytes, email):
     try:
