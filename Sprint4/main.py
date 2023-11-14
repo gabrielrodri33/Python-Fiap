@@ -1,5 +1,4 @@
 import db
-# import neverbounce_sdk
 import bcrypt
 import json
 import base64
@@ -8,6 +7,7 @@ import datetime
 import os
 import re
 import webbrowser
+import random
 from api import viacep
 from api import cellerecpf
 import time
@@ -99,9 +99,17 @@ def validacao(dado):
                 separador("Entrada inválida!", 7)
                 print("Por favor insira um número")
 
+    elif dado == 4:
+        while not status:
+            try:
+                option = input("Informações corretas? [S/N]").strip().upper()
+                if option in ["S", "N"]:
+                    status = True
+            except ValueError as e:
+                print(f"Error: {e}")
+    
     elif dado == 5:
         status = False
-    if dado == 1:
         while not status:
             try:
                 separador(30, 1)
@@ -157,15 +165,27 @@ def validacao(dado):
                 separador(30, 1)
                 separador("Entrada inválida!", 7)
                 print("Por favor insira um número")
-
-    elif dado == 4:
+    
+    elif dado == 7:
+        status = False
         while not status:
             try:
-                option = input("Informações corretas? [S/N]").strip().upper()
-                if option in ["S", "N"]:
+                option = int(input('Verifique as informações!\nSe correto digite 0, caso contrário 1: '))
+
+                if option == 1 or option == 0:
                     status = True
-            except ValueError as e:
-                print(f"Error: {e}")
+
+                else:
+                    clear_console()
+                    separador(30, 1)
+                    separador("Entrada inválida!", 7)
+                    print("Por favor escolha 0 ou 1!")
+
+            except ValueError:
+                clear_console()
+                separador(30, 1)
+                separador("Entrada inválida!", 7)
+                print("Por favor insira um número")
     
     return option
 
@@ -267,56 +287,24 @@ def formatarCpf():
             verifica = False
         else:
             verifica = True
-        
-        if verifica == True:
-            break
 
-        # consulta = cellerecpf.consultaCpf(cpf)
-        # if consulta:
-        #     break
+        consulta = cellerecpf.consultaCpf(cpf)
+        if consulta == True and verifica == True:
+            break
 
     return cpf
 
-# def verifica_pwd(password):
-#     while len(password) < 8 or len(password) > 20 or not any(char.isdigit() for char in password) or not any(char.islower() for char in password) or not any(char.isupper() for char in password):
-#         separador("Erro!", 7)
-#         print("Senha deve conter:\n•Entre 8 e 20 caracteres.\n•Pelo menos um número.\n•Uma letra maiúscula e minúscula.")
-#         password = getpass.getpass("Digite uma senha entre 8 e 20 caracteres, que contenha pelo menos um número: ")
-#     return password
-
-# def pwd():
-#     password = getpass.getpass("Senha: ").encode("utf-8")        
-#     password = verifica_pwd(password)
-#     confirm_password = getpass.getpass("Confirmar senha: ").encode("utf-8")
-#     confirm_password = verifica_pwd(confirm_password)
-
-#     while password != confirm_password:
-#         separador("Senhas diferentes!", 7)
-#         password = getpass.getpass("Senha: ").encode("utf-8")
-#         password = verifica_pwd(password)
-#         confirm_password = getpass.getpass("Confirmar senha: ").encode("utf-8") 
-#         confirm_password = verifica_pwd(confirm_password)
-
-#     code = base64.b64encode(password).decode('utf-8')
-
-#     hashed = bcrypt.hashpw(password, bcrypt.gensalt())
-
-#     return hashed, code
-
 def pwd():
-    password = getpass.getpass("Senha: ").encode("utf-8")
-    confirm_password = getpass.getpass("Confirmar senha: ").encode("utf-8")
-
-    while password != confirm_password:
-        separador("Senhas diferentes!", 7)
+    while True:
         password = getpass.getpass("Senha: ").encode("utf-8")
-        confirm_password = getpass.getpass("Confirmar senha: ").encode("utf-8") 
+        confirm_password = getpass.getpass("Confirmar senha: ").encode("utf-8")
 
-    code = base64.b64encode(password).decode('utf-8')
-
-    hashed = bcrypt.hashpw(password, bcrypt.gensalt())
-
-    return hashed, code
+        if password == confirm_password and 8 <= len(password) <= 20 and any(char.isdigit() for char in password.decode("utf-8")) and any(char.islower() for char in password.decode("utf-8")) and any(char.isupper() for char in password.decode("utf-8")):
+            code = base64.b64encode(password).decode('utf-8')
+            hashed = bcrypt.hashpw(password, bcrypt.gensalt())
+            return hashed, code
+        else:
+            separador("Senha inválida! Certifique-se de que ela tenha entre 8 e 20 caracteres, contenha pelo menos um número e uma letra maiúscula e minúscula.", 7)
 
 def validaEmail():
     status = False
@@ -399,9 +387,9 @@ def cadastroCliente():
 
     clear_console()
 
-    update_cliente(dados_cliente, cpf)
+    email = update_cliente(dados_cliente, cpf)
 
-    return cpf
+    return cpf, email
     
 
 def cadastroEndereco(cpf):
@@ -466,6 +454,7 @@ def update_cliente(dados_cliente, cpf):
                 dados_cliente["email"] = validaEmail()
                 db.update("cliente", "email", dados_cliente["email"], cpf)
                 atualizacao_txt("Email atualizado", dados_cliente["email"])
+    return dados_cliente["email"]
 
 def update_endereco(endereco_cliente, cpf):
     mudanca = ""
@@ -475,7 +464,7 @@ def update_endereco(endereco_cliente, cpf):
         centralizar("Informações de Endereço", 60)
         separador(30, 2)
         print(f'Logradouro: {endereco_cliente["logradouro"]}\nBairro: {endereco_cliente["bairro"]}\nLocalidade: {endereco_cliente["localidade"]}\nUF: {endereco_cliente["uf"]}\nComplemento: {endereco_cliente["complemento"]}\nNúmero: {endereco_cliente["numero"]}')
-        mudanca = validacao(5)
+        mudanca = validacao(7)
         match mudanca:
             case 1:
                 separador(30,3)
@@ -559,33 +548,24 @@ def login_user():
         centralizar("Logado!", 60)
         atualizacao_txt("Usuário logado", email)
         option = validacao(6)
-    email = ""
     senha = ""
-    return  option, login
+    return  option, login, email
 
 def formata_valor():
-    status = False
-    while not status:
+    while True:
         try:
             valor = int(input("Valor: R$"))
+            valor = round(valor, 2)
+            valor_str = '{:,}'.format(int(valor))
+            if valor == int(valor):
+                valor_str += '.00'
+            else:
+                valor_str += '.' + '{:02d}'.format(int(valor % 1 * 100))
+            return 'R$' + valor_str
+        except ValueError:
+            separador("Insira um número válido!", 7)
 
-            break
-        except:
-            print("Insira um número!")
-
-
-    if isinstance(valor, (int, float)):
-        valor = round(valor, 2)
-        valor_str = '{:,}'.format(int(valor))
-        if valor == int(valor):
-            valor_str += '.00'
-        else:
-            valor_str += '.' + '{:02d}'.format(int(valor % 1 * 100))
-        return 'R$' + valor_str
-    else:
-        raise ValueError('Invalid valor format')
-
-def cadastro_bike():
+def cadastro_bike(email):
     clear_console()
     separador(30, 3)
     centralizar('Cadastro de bike!', 60)
@@ -594,30 +574,65 @@ def cadastro_bike():
     valor_aprox = formata_valor()
     num_serie = input("Número de série: ")
     cor = input("Cor: ")
-    obs = print("Observação: ")
-    db.insert_bike_modelo(nome, valor_aprox)
-    # sql_query_bike_modelos = """
-    #         CREATE TABLE bike_modelos (
-    #             id_modelo   INTEGER NOT NULL,
-    #             nome        VARCHAR2(255) NOT NULL,
-    #             valor_aprox NUMBER(18, 2),
-    #             CONSTRAINT bike_modelos_pk PRIMARY KEY (id_modelo)
-    #         )"""
-    # bikes
-    # CREATE TABLE bikes (
-    #     num_serie              VARCHAR2(255) NOT NULL,
-    #     valor                  NUMBER(18, 2) NOT NULL,
-    #     cor                    VARCHAR2(255) NOT NULL,
-    #     bike_modelos_id_modelo INTEGER NOT NULL,
+    obs = input("Observação: ")
+    cpf = db.get_cpf_from_email(email)
+    id_modelo = db.insert_bike_modelo(nome, valor_aprox, cor, num_serie, obs, cpf)
+    dados_bike = {
+        'modelo': nome,
+        'valor_aprox': valor_aprox,
+        'num_serie': num_serie,
+        'cor': cor,
+        'obs': obs
+    }
+    atualizacao_txt("Bike Cadastrada!", id_modelo)
+    update_bike(dados_bike, id_modelo)
+    simulacao_vistoria(dados_bike["num_serie"], cpf)
 
-    # CREATE TABLE vistoria (
-    #     id_vistoria     INTEGER NOT NULL,
-    #     dt_inicio       DATE NOT NULL,
-    #     dt_fim          DATE,
-    #     aprov           CHAR(1) NOT NULL,
-    #     obs             CLOB,
-    #     bikes_num_serie VARCHAR2(255) NOT NULL,
-    #     cliente_cpf     VARCHAR2(15) NOT NULL,
+def simulacao_vistoria(num_serie, cpf):
+    
+    url = "https://prototipo-od.vercel.app"
+    webbrowser.open(url)
+
+    situacao = random.randint(1, 2)
+    if situacao == 1:
+        aprov = 'S'
+        print("Seguro da bike aprovado!")
+    else:
+        aprov = 'N'
+        print("Seguro da bike recusado!")
+
+    db.insert_vistoria(aprov, num_serie, cpf)
+
+def update_bike(dados_bike, modelo_id):
+    mudanca = ""
+    while mudanca != 0:
+        separador(30, 2)
+        centralizar("Atualização de Informações da Bicicleta", 60)
+        separador(30, 2)
+        print(f'1- Modelo: {dados_bike["modelo"]}\n2- Valor Aproximado: {dados_bike["valor_aprox"]}\n3- Cor: {dados_bike["cor"]}\n4- Número de Série: {dados_bike["num_serie"]}\n5- Observação: {dados_bike["obs"]}')
+        mudanca = validacao(2)
+        match mudanca:
+            case 1:
+                dados_bike["modelo"] = input('Novo modelo: ').strip().title()
+                db.update_bike("bike_modelos", "nome", dados_bike["modelo"], modelo_id)
+                atualizacao_txt("Modelo atualizado", dados_bike["modelo"])
+            case 2:
+                dados_bike["valor_aprox"] = formata_valor()
+                db.update_bike("bike_modelos", "valor_aprox", dados_bike["valor_aprox"], modelo_id)
+                atualizacao_txt("Valor Aproximado atualizado", dados_bike["valor_aprox"])
+            case 3:
+                dados_bike["cor"] = input('Nova cor: ').strip().title()
+                db.update_bike("bike_modelos", "cor", dados_bike["cor"], modelo_id)
+                atualizacao_txt("Cor atualizada", dados_bike["cor"])
+            case 4:
+                dados_bike["num_serie"] = input('Novo número de série: ').strip().upper()
+                db.update_bike("bike_modelos", "num_serie", dados_bike["num_serie"], modelo_id)
+                atualizacao_txt("Número de Série atualizado", dados_bike["num_serie"])
+            case 5:
+                dados_bike["obs"] = input('Nova observação: ')
+                db.update_bike("bike_modelos", "obs", dados_bike["obs"], modelo_id)
+                atualizacao_txt("Observação atualizada", dados_bike["obs"])
+    return dados_bike
 
 def menuPrincipal():
     option = validacao(1)
@@ -627,14 +642,14 @@ def menuPrincipal():
     while True:
         match option:
             case 1:
-                option, login = login_user()
+                option, login, email = login_user()
                     
             case 2:
                 if login == True:
                     print("Você já está logado")
                     option = validacao(6)
                 else:
-                    cpf = cadastroCliente()
+                    cpf, email = cadastroCliente()
                     endereco_cliente = cadastroEndereco(cpf)
                     update_endereco(endereco_cliente, cpf)
                     print("Redirecionando para seguro de bike!")
@@ -643,14 +658,23 @@ def menuPrincipal():
 
             case 3:
                 if login:
-                    cadastro_bike()
+                    cadastro_bike(email)
                 else:
                     separador(30,3)
-                    print("É neccesário estar logado!")
+                    centralizar("É neccesário estar logado!", 60)
                     option = 1
+                
+                if option == 1:
+                    pass
+                else:
+                    break
             
             case 4:
-                pass
+                separador(80, 2)
+                centralizar("Informações de seguro!", 160)
+                separador(80, 2)
+                print('Bem-vindo ao nosso Seguro de Bicicleta, uma maneira simples e segura de proteger sua bicicleta contra imprevistos. Na Porto Seguro, compreendemos o valor que sua bicicleta tem para você, seja para o lazer ou para deslocamentos diários. Com nosso seguro de bicicleta, você pode pedalar com tranquilidade, sabendo que está protegido.\n\nPor que escolher o Seguro de Bicicleta da Porto Seguro:\n\n- Cobertura Abrangente: Nosso seguro oferece cobertura contra roubo, furto qualificado e danos acidentais à sua bicicleta.\n- Ampla Rede de Oficinas Parceiras: Trabalhamos com uma ampla rede de oficinas especializadas para garantir o melhor atendimento em caso de reparos.\n- Cobertura em Todo o Brasil: Esteja você pedalando na cidade ou explorando trilhas, nosso seguro oferece cobertura em todo o território nacional.\n- Facilidade de Contratação: Você pode adquirir seu seguro de bicicleta de forma rápida e descomplicada, diretamente pelo aplicativo.')
+                break
 
             case 5:
                 url = 'https://www.portoseguro.com.br/conteudo/mobile/portoseguro/politica-de-privacidade.html'
